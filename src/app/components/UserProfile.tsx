@@ -1,54 +1,114 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { ArrowLeft, TrendingUp, Trophy, Clock } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react';
+import { ArrowLeft, TrendingUp, Trophy, Coins, History, FileText, Sparkles, CircleDot, Spade } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../contexts/AuthContext';
+import { LocalStorage, GameHistory } from '../lib/storage';
+import { formatMoney, formatDate } from '../utils/maskUtils';
 
-import { useAuth } from '../contexts/AuthContext'
-import { LocalStorage, GameHistory } from '../lib/storage'
-import { formatMoney, formatDate } from '../utils/maskUtils'
+const HistoryItem = ({ game }: { game: GameHistory }) => {
+  const profit = game.payout_amount - game.bet_amount;
+  const isWin = profit > 0;
+  const isPush = profit === 0 && game.payout_amount > 0;
+
+  const icons: { [key: string]: React.ReactNode } = {
+    slots: <Sparkles size={24} className="text-amber-400" />,
+    roulette: <CircleDot size={24} className="text-red-400" />,
+    blackjack: <Spade size={24} className="text-blue-400" />,
+  };
+
+  const colors = {
+    win: 'text-green-400 border-green-500/30 bg-green-500/10',
+    loss: 'text-red-400 border-red-500/30 bg-red-500/10',
+    push: 'text-blue-400 border-blue-500/30 bg-blue-500/10'
+  };
+
+  const gameStatus = isWin ? 'win' : isPush ? 'push' : 'loss';
+
+  return (
+    <div className={`p-3 sm:p-4 rounded-lg border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${colors[gameStatus]}`}>
+      <div className="flex items-center gap-4">
+        <div className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-lg ${colors[gameStatus]}`}>
+          {icons[game.game_type]}
+        </div>
+        <div>
+          <div className="font-bold text-white capitalize text-base sm:text-lg">
+            {game.game_type}
+          </div>
+          <div className="text-xs text-slate-400">
+            {formatDate(game.created_at)}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 sm:gap-8 items-center text-center sm:text-right">
+        <div>
+          <div className="text-slate-400 text-xs sm:text-sm">Aposta</div>
+          <div className='text-sm sm:text-base text-white font-semibold'>{formatMoney(game.bet_amount)}</div>
+        </div>
+        <div className='text-right'>
+          <div className="text-slate-400 text-xs sm:text-sm">Lucro</div>
+          <div className={`font-bold text-sm sm:text-base ${isWin ? 'text-green-400' : isPush ? 'text-blue-400' : 'text-red-400'}`}>
+            {profit >= 0 ? '+' : ''}{formatMoney(profit)}
+          </div>
+        </div>
+        <div>
+          <div className="text-slate-400 text-xs sm:text-sm">Total</div>
+          <div className='text-sm sm:text-base text-white font-semibold'>{formatMoney(game.payout_amount)}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+type StatCardProps = {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  colorClass: string;
+};
+
+const StatCard = ({ icon, label, value, colorClass }: StatCardProps) => (
+  <div className="bg-slate-900/50 p-4 rounded-xl flex items-center gap-4">
+    <div className={`p-3 rounded-lg ${colorClass}/20`}>
+      {icon}
+    </div>
+    <div>
+      <div className={`text-xl sm:text-2xl font-bold ${colorClass}`}>{value}</div>
+      <div className="text-slate-400 text-sm">{label}</div>
+    </div>
+  </div>
+);
 
 export const UserProfile = ({ onBack }: { onBack: () => void }) => {
-  const { profile } = useAuth()
-  const [gameHistory, setGameHistory] = useState<GameHistory[]>([])
-  const [loading, setLoading] = useState(true)
+  const { profile } = useAuth();
+  const [gameHistory, setGameHistory] = useState<GameHistory[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchGameHistory = () => {
-      if (!profile) return
-
-      const data = LocalStorage.getGameHistoryForUser(profile.id, 20)
-      setGameHistory(data)
-      setLoading(false)
+    if (profile) {
+      setGameHistory(LocalStorage.getGameHistoryForUser(profile.id, 20));
+      setLoading(false);
     }
-
-    fetchGameHistory()
-  }, [profile])
-
-  const getGameIcon = (gameType: string) => {
-    switch (gameType) {
-      case 'slots': return '🎰'
-      case 'roulette': return '🎡'
-      case 'blackjack': return '🃏'
-      default: return '🎲'
-    }
-  }
+  }, [profile]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.1 },
-    },
-  }
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+  };
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
-  }
+    visible: { y: 0, opacity: 1, transition: { type: "spring" as const, stiffness: 100 } },
+  };
+
+  const netProfit = (profile?.total_won ?? 0) - (profile?.total_wagered ?? 0);
+  const winRate = profile?.total_wagered ? ((profile.total_won / profile.total_wagered) * 100).toFixed(1) + '%' : 'N/A';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
-      <motion.div 
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6 text-white">
+      <motion.div
         className="max-w-4xl mx-auto"
         initial="hidden"
         animate="visible"
@@ -57,120 +117,67 @@ export const UserProfile = ({ onBack }: { onBack: () => void }) => {
         <motion.button
           variants={itemVariants}
           onClick={onBack}
-          className="mb-6 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors flex items-center gap-2"
+          className="mb-6 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
         >
           <ArrowLeft size={20} />
           Voltar ao lobby
         </motion.button>
 
-        <motion.div variants={itemVariants} className="bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700 p-8 mb-6">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-500 rounded-full flex items-center justify-center text-3xl font-bold text-white">
+        <motion.div variants={itemVariants} className="bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700 p-6 sm:p-8 mb-6">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mb-6">
+            <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-500 rounded-full flex items-center justify-center text-3xl font-bold text-white flex-shrink-0">
               {profile?.username.charAt(0).toUpperCase()}
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">{profile?.username}</h1>
+            <div className='text-center sm:text-left'>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">{profile?.username}</h1>
               <p className="text-slate-400">{profile?.email}</p>
             </div>
           </div>
 
-          <motion.div variants={containerVariants} className="grid md:grid-cols-3 gap-4">
-            <motion.div variants={itemVariants} className="bg-slate-900/50 p-4 rounded-xl">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-amber-500/20 rounded-lg">
-                  <TrendingUp className="text-amber-400" size={24} />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-amber-400">
-                    {formatMoney(profile?.balance ?? 0)}
-                  </div>
-                  <div className="text-slate-400 text-sm">Saldo Atual</div>
-                </div>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <motion.div variants={itemVariants}>
+              <StatCard icon={<Coins className="text-amber-400" size={24} />} label="Saldo Atual" value={formatMoney(profile?.balance ?? 0)} colorClass="text-amber-400" />
             </motion.div>
-
-            <motion.div variants={itemVariants} className="bg-slate-900/50 p-4 rounded-xl">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-blue-500/20 rounded-lg">
-                  <Trophy className="text-blue-400" size={24} />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-blue-400">
-                    {formatMoney(profile?.total_won ?? 0)}
-                  </div>
-                  <div className="text-slate-400 text-sm">Total ganho</div>
-                </div>
-              </div>
+            <motion.div variants={itemVariants}>
+              <StatCard icon={<Trophy className="text-green-400" size={24} />} label="Lucro Líquido" value={formatMoney(netProfit)} colorClass={netProfit >= 0 ? "text-green-400" : "text-red-400"} />
             </motion.div>
-
-            <motion.div variants={itemVariants} className="bg-slate-900/50 p-4 rounded-xl">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-purple-500/20 rounded-lg">
-                  <Clock className="text-purple-400" size={24} />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-purple-400">
-                    {formatMoney(profile?.total_wagered ?? 0)}
-                  </div>
-                  <div className="text-slate-400 text-sm">Total apostado</div>
-                </div>
-              </div>
+            <motion.div variants={itemVariants}>
+              <StatCard icon={<TrendingUp className="text-blue-400" size={24} />} label="Taxa de Retorno" value={winRate} colorClass="text-blue-400" />
             </motion.div>
-          </motion.div>
+            <motion.div variants={itemVariants}>
+              <StatCard icon={<History className="text-purple-400" size={24} />} label="Jogos Jogados" value={gameHistory.length} colorClass="text-purple-400" />
+            </motion.div>
+          </div>
         </motion.div>
 
-        <motion.div variants={itemVariants} className="bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700 p-8">
-          <h2 className="text-2xl font-bold text-white mb-6">Histórico de Jogos</h2>
+        <motion.div variants={itemVariants} className="bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700 p-6 sm:p-8">
+          <div className='flex items-center gap-3 mb-6'>
+            <FileText size={24} className='text-slate-300' />
+            <h2 className="text-2xl font-bold text-white">Histórico de Jogos Recentes</h2>
+          </div>
 
-          {loading ? (
-            <div className="text-center text-slate-400 py-8">Carregando...</div>
-          ) : gameHistory.length === 0 ? (
-            <div className="text-center text-slate-400 py-8">Nenhum jogo jogado ainda. Comece a jogar para ver seu histórico!</div>
-          ) : (
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {gameHistory.map((game) => {
-                const profit = game.payout_amount - game.bet_amount
-                const isWin = profit > 0
-                const isPush = profit === 0 && game.payout_amount > 0
-
-                return (
-                  <div
+          <AnimatePresence>
+            {loading ? (
+              <div className="text-center text-slate-400 py-8">Carregando...</div>
+            ) : gameHistory.length === 0 ? (
+              <div className="text-center text-slate-400 py-8">Nenhum jogo jogado ainda.</div>
+            ) : (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                {gameHistory.map((game, index) => (
+                  <motion.div
                     key={game.id}
-                    className="bg-slate-900/50 p-4 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="text-3xl">{getGameIcon(game.game_type)}</span>
-                        <div>
-                          <div className="font-semibold text-white capitalize">
-                            {game.game_type}
-                          </div>
-                          <div className="text-xs text-slate-400">
-                            {formatDate(game.created_at)}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="text-right">
-                        <div className="text-slate-400 text-sm">
-                          Bet: {game.bet_amount}
-                        </div>
-                        <div className={`font-bold ${
-                          isWin ? 'text-green-400' :
-                          isPush ? 'text-blue-400' :
-                          'text-red-400'
-                        }`}>
-                          {profit > 0 ? '+' : ''}{profit.toFixed(0)}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+                    <HistoryItem game={game} />
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       </motion.div>
     </div>
-  )
-}
+  );
+};
