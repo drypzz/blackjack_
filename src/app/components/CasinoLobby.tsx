@@ -86,7 +86,7 @@ export const CasinoLobby = () => {
                 <motion.button
                   variants={itemVariants}
                   onClick={() => setCurrentGame('slots')}
-                  className="group relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl p-8 rounded-2xl border-2 border-slate-700 hover:border-amber-500 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-amber-500/20"
+                  className="group relative bg-gradient-to-br from-slate-800/80 cursor-pointer to-slate-900/80 backdrop-blur-xl p-8 rounded-2xl border-2 border-slate-700 hover:border-amber-500 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-amber-500/20"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-amber-500/0 to-orange-500/0 group-hover:from-amber-500/10 group-hover:to-orange-500/10 rounded-2xl transition-all"></div>
                   <div className="relative">
@@ -102,7 +102,7 @@ export const CasinoLobby = () => {
                 <motion.button
                   variants={itemVariants}
                   onClick={() => setCurrentGame('roulette')}
-                  className="group relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl p-8 rounded-2xl border-2 border-slate-700 hover:border-amber-500 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-amber-500/20"
+                  className="group relative bg-gradient-to-br from-slate-800/80 cursor-pointer to-slate-900/80 backdrop-blur-xl p-8 rounded-2xl border-2 border-slate-700 hover:border-amber-500 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-amber-500/20"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-amber-500/0 to-orange-500/0 group-hover:from-amber-500/10 group-hover:to-orange-500/10 rounded-2xl transition-all"></div>
                   <div className="relative">
@@ -118,7 +118,7 @@ export const CasinoLobby = () => {
                 <motion.button
                   variants={itemVariants}
                   onClick={() => setCurrentGame('blackjack')}
-                  className="group relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl p-8 rounded-2xl border-2 border-slate-700 hover:border-amber-500 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-amber-500/20"
+                  className="group relative bg-gradient-to-br from-slate-800/80 cursor-pointer to-slate-900/80 backdrop-blur-xl p-8 rounded-2xl border-2 border-slate-700 hover:border-amber-500 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-amber-500/20"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-amber-500/0 to-orange-500/0 group-hover:from-amber-500/10 group-hover:to-orange-500/10 rounded-2xl transition-all"></div>
                   <div className="relative">
@@ -167,43 +167,50 @@ export const CasinoLobby = () => {
 
       <div className="relative">
         <header className="bg-slate-900/80 backdrop-blur-xl border-b border-slate-700 sticky top-0 z-10">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+            <div className="flex items-center justify-between gap-2">
+
               <div>
-                <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">
+                <h1 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">
                   Royal Casino
                 </h1>
-                <p className="text-slate-400 text-sm mt-1">Bem-vindo, {profile?.username}</p>
+                <p className="hidden sm:block text-slate-400 text-sm mt-1">Bem-vindo, {profile?.username}</p>
               </div>
 
-              <div className="flex items-center gap-4">
-                <div className="bg-slate-800/80 backdrop-blur-sm px-6 py-3 rounded-xl border border-slate-700">
+              <div className="flex items-center gap-2 sm:gap-4">
+
+                <div className="bg-slate-800/80 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-xl border border-slate-700">
                   <div className="flex items-center gap-2">
-                    <Coins className="text-amber-400" size={24} />
+                    <Coins className="text-amber-400" size={20} />
                     <div>
-                      <div className="text-xs text-slate-400">Saldo</div>
-                      <div className="text-xl font-bold text-amber-400">
+                      <div className="hidden sm:block text-xs text-slate-400 leading-tight">Saldo</div>
+                      <div className="text-base sm:text-lg font-bold text-amber-400 leading-tight">
                         {formatMoney(profile?.balance ?? 0)}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <button
-                  onClick={() => setCurrentGame('profile')}
-                  className="p-3 bg-slate-800/80 hover:bg-slate-700/80 rounded-xl border border-slate-700 transition-colors"
-                  title="View Profile"
-                >
-                  <User size={24} className="text-slate-300" />
-                </button>
+                <div className="flex items-center bg-slate-800/80 rounded-xl border border-slate-700">
+                  <button
+                    onClick={() => setCurrentGame('profile')}
+                    className="p-2 sm:p-3 hover:bg-slate-700/80 rounded-l-xl transition-colors cursor-pointer"
+                    title="Ver Perfil"
+                  >
+                    <User size={20} className="text-slate-300" />
+                  </button>
 
-                <button
-                  onClick={handleSignOut}
-                  className="p-3 bg-red-900/30 hover:bg-red-900/50 rounded-xl border border-red-800 transition-colors"
-                  title="Sign Out"
-                >
-                  <LogOut size={24} className="text-red-400" />
-                </button>
+                  <div className="w-px h-6 bg-slate-700"></div>
+
+                  <button
+                    onClick={handleSignOut}
+                    className="p-2 sm:p-3 hover:bg-red-900/50 rounded-r-xl transition-colors cursor-pointer"
+                    title="Sair"
+                  >
+                    <LogOut size={20} className="text-red-400" />
+                  </button>
+                </div>
+
               </div>
             </div>
           </div>

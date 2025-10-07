@@ -13,7 +13,7 @@
 }
 
 .clip-path-wedge {
-  clip-path: polygon(50% 50%, 100% 0, 100% 19.5%); /* Ajustado para melhor encaixe */
+  clip-path: polygon(50% 50%, 100% 0, 100% 19.5%);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -21,6 +21,26 @@
     --background: #0a0a0a;
     --foreground: #ededed;
   }
+}
+
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e293b;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #475569;
+  border-radius: 10px;
+  border: 3px solid #1e293b;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #38bdf8;
 }
 
 body {
