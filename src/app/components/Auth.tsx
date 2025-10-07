@@ -1,43 +1,44 @@
-"use client";
+"use client"
 
-import { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { LogIn, UserPlus } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { LogIn, UserPlus } from 'lucide-react'
+
+import { useAuth } from '../contexts/AuthContext'
 
 export const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const [isLogin, setIsLogin] = useState(true)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [username, setUsername] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { signIn, signUp } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+    e.preventDefault()
+    setError('')
+    setLoading(true)
 
     try {
       if (isLogin) {
-        await signIn(email, password);
+        await signIn(email, password)
       } else {
         if (!username.trim()) {
-          throw new Error('Username is required');
+          throw new Error('Nome de usuário é obrigatório')
         }
-        await signUp(email, password, username);
+        await signUp(email, password, username)
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred');
+      setError(err.message || 'Ocorreu um erro')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-20"></div>
+      <div className="absolute inset-0 bg-[url('data:image/svg+xmlbase64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-20"></div>
       
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -50,7 +51,7 @@ export const Auth = () => {
             Royal Casino
           </h1>
           <p className="text-slate-400">
-            {isLogin ? 'Welcome back!' : 'Join the excitement'}
+            {isLogin ? 'Bem-vindo de volta!' : 'Junte-se à emoção'}
           </p>
         </div>
 
@@ -66,7 +67,7 @@ export const Auth = () => {
                 className="overflow-hidden"
               >
                 <label htmlFor="username" className="block text-sm font-medium text-slate-300 mb-1">
-                  Username
+                  Nome do usuário
                 </label>
                 <input
                   id="username"
@@ -74,7 +75,7 @@ export const Auth = () => {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-white placeholder-slate-500"
-                  placeholder="Choose a username"
+                  placeholder="Escolha um nome de usuário"
                   required={!isLogin}
                 />
               </motion.div>
@@ -91,14 +92,14 @@ export const Auth = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-white placeholder-slate-500"
-              placeholder="your@email.com"
+              placeholder="seu@email.com"
               required
             />
           </div>
 
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-1">
-              Password
+              Senha
             </label>
             <input
               id="password"
@@ -128,12 +129,12 @@ export const Auth = () => {
             ) : isLogin ? (
               <>
                 <LogIn size={20} />
-                Sign In
+                Conectar-se
               </>
             ) : (
               <>
                 <UserPlus size={20} />
-                Sign Up
+                Registrar-se
               </>
             )}
           </button>
@@ -142,15 +143,15 @@ export const Auth = () => {
         <div className="mt-6 text-center">
           <button
             onClick={() => {
-              setIsLogin(!isLogin);
-              setError('');
+              setIsLogin(!isLogin)
+              setError('')
             }}
             className="text-amber-400 hover:text-amber-300 text-sm transition-colors"
           >
-            {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+            {isLogin ? "Não tem uma conta? Registrar-se" : 'Já tem uma conta? Conectar-se'}
           </button>
         </div>
       </motion.div>
     </div>
-  );
-};
+  )
+}

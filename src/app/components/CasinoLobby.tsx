@@ -1,39 +1,41 @@
-"use client";
+"use client"
 
-import { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { Sparkles, CircleDot, Spade, LogOut, User, Coins } from 'lucide-react';
-import { SlotMachine } from '../games/SlotMachine';
-import { Roulette } from '../games/Roulette';
-import { Blackjack } from '../games/Blackjack';
-import { UserProfile } from './UserProfile';
-import { motion, AnimatePresence, AnimationType, AnimationGeneratorType, easeInOut } from 'framer-motion';
+import { useState } from 'react'
+import { motion, AnimatePresence, AnimationType, AnimationGeneratorType, easeInOut } from 'framer-motion'
+import { Sparkles, CircleDot, Spade, LogOut, User, Coins } from 'lucide-react'
 
-type GameType = 'lobby' | 'slots' | 'roulette' | 'blackjack' | 'profile';
+import { UserProfile } from './UserProfile'
+import { useAuth } from '../contexts/AuthContext'
+import { SlotMachine } from '../games/SlotMachine'
+import { Roulette } from '../games/Roulette'
+import { Blackjack } from '../games/Blackjack'
+import { formatMoney } from '../utils/maskUtils'
+
+type GameType = 'lobby' | 'slots' | 'roulette' | 'blackjack' | 'profile'
 
 export const CasinoLobby = () => {
-  const { profile, signOut } = useAuth();
-  const [currentGame, setCurrentGame] = useState<GameType>('lobby');
+  const { profile, signOut } = useAuth()
+  const [currentGame, setCurrentGame] = useState<GameType>('lobby')
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      await signOut()
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error('Error signing out:', error)
     }
-  };
+  }
 
   const pageVariants = {
     initial: { opacity: 0, x: -50 },
     in: { opacity: 1, x: 0 },
     out: { opacity: 0, x: 50 },
-  };
+  }
 
   const pageTransition = {
     type: "tween" as AnimationGeneratorType,
     ease: easeInOut,
     duration: 0.5,
-  };
+  }
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -43,24 +45,24 @@ export const CasinoLobby = () => {
         staggerChildren: 0.1,
       },
     },
-  };
+  }
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: { y: 0, opacity: 1 },
-  };
+  }
 
 
   const renderContent = () => {
     switch (currentGame) {
       case 'slots':
-        return <SlotMachine onBack={() => setCurrentGame('lobby')} />;
+        return <SlotMachine onBack={() => setCurrentGame('lobby')} />
       case 'roulette':
-        return <Roulette onBack={() => setCurrentGame('lobby')} />;
+        return <Roulette onBack={() => setCurrentGame('lobby')} />
       case 'blackjack':
-        return <Blackjack onBack={() => setCurrentGame('lobby')} />;
+        return <Blackjack onBack={() => setCurrentGame('lobby')} />
       case 'profile':
-        return <UserProfile onBack={() => setCurrentGame('lobby')} />;
+        return <UserProfile onBack={() => setCurrentGame('lobby')} />
       case 'lobby':
       default:
         return (
@@ -73,8 +75,8 @@ export const CasinoLobby = () => {
           >
             <main className="max-w-7xl mx-auto px-6 py-12">
               <motion.div variants={itemVariants} className="text-center mb-12">
-                <h2 className="text-4xl font-bold text-white mb-3">Choose Your Game</h2>
-                <p className="text-slate-400 text-lg">Try your luck at our premium casino games</p>
+                <h2 className="text-4xl font-bold text-white mb-3">Escolha seu jogo</h2>
+                <p className="text-slate-400 text-lg">Tente a sorte em nossos jogos de cassino premium</p>
               </motion.div>
 
               <motion.div
@@ -92,8 +94,8 @@ export const CasinoLobby = () => {
                       <Sparkles size={40} className="text-white" />
                     </div>
                     <h3 className="text-2xl font-bold text-white mb-2">Slot Machine</h3>
-                    <p className="text-slate-400 mb-4">Match 3 symbols to win big!</p>
-                    <div className="text-amber-400 font-semibold">Up to 10x payout</div>
+                    <p className="text-slate-400 mb-4">Combine 3 símbolos para ganhar muito!</p>
+                    <div className="text-amber-400 font-semibold">Até 10x de pagamento</div>
                   </div>
                 </motion.button>
 
@@ -107,9 +109,9 @@ export const CasinoLobby = () => {
                     <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-red-500 to-rose-500 rounded-2xl flex items-center justify-center shadow-lg">
                       <CircleDot size={40} className="text-white" />
                     </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">Roulette</h3>
-                    <p className="text-slate-400 mb-4">Bet on colors, odds, or ranges</p>
-                    <div className="text-amber-400 font-semibold">2x payout</div>
+                    <h3 className="text-2xl font-bold text-white mb-2">Roleta</h3>
+                    <p className="text-slate-400 mb-4">Aposte em cores, probabilidades ou faixas</p>
+                    <div className="text-amber-400 font-semibold">2x de pagamento</div>
                   </div>
                 </motion.button>
 
@@ -124,8 +126,8 @@ export const CasinoLobby = () => {
                       <Spade size={40} className="text-white" />
                     </div>
                     <h3 className="text-2xl font-bold text-white mb-2">Blackjack</h3>
-                    <p className="text-slate-400 mb-4">Beat the dealer to 21</p>
-                    <div className="text-amber-400 font-semibold">Up to 2.5x payout</div>
+                    <p className="text-slate-400 mb-4">Derrote o dealer até 21</p>
+                    <div className="text-amber-400 font-semibold">Até 2.5x de pagamento</div>
                   </div>
                 </motion.button>
               </motion.div>
@@ -136,28 +138,28 @@ export const CasinoLobby = () => {
               >
                 <motion.div variants={itemVariants} className="bg-slate-800/50 backdrop-blur-sm p-6 rounded-xl border border-slate-700">
                   <div className="text-3xl font-bold text-amber-400 mb-2">
-                    {profile?.total_wagered.toFixed(0)}
+                    {formatMoney(profile?.total_wagered ?? 0)}
                   </div>
-                  <div className="text-slate-400">Total Wagered</div>
+                  <div className="text-slate-400">Total Apostado</div>
                 </motion.div>
                 <motion.div variants={itemVariants} className="bg-slate-800/50 backdrop-blur-sm p-6 rounded-xl border border-slate-700">
                   <div className="text-3xl font-bold text-green-400 mb-2">
-                    {profile?.total_won.toFixed(0)}
+                    {formatMoney(profile?.total_won ?? 0)}
                   </div>
-                  <div className="text-slate-400">Total Won</div>
+                  <div className="text-slate-400">Total Ganho</div>
                 </motion.div>
                 <motion.div variants={itemVariants} className="bg-slate-800/50 backdrop-blur-sm p-6 rounded-xl border border-slate-700">
                   <div className="text-3xl font-bold text-blue-400 mb-2">
                     {profile ? ((profile.total_won / (profile.total_wagered || 1)) * 100).toFixed(1) : 0}%
                   </div>
-                  <div className="text-slate-400">Win Rate</div>
+                  <div className="text-slate-400">Taxa de Vitória</div>
                 </motion.div>
               </motion.div>
             </main>
           </motion.div>
-        );
+        )
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -171,7 +173,7 @@ export const CasinoLobby = () => {
                 <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">
                   Royal Casino
                 </h1>
-                <p className="text-slate-400 text-sm mt-1">Welcome, {profile?.username}</p>
+                <p className="text-slate-400 text-sm mt-1">Bem-vindo, {profile?.username}</p>
               </div>
 
               <div className="flex items-center gap-4">
@@ -179,9 +181,9 @@ export const CasinoLobby = () => {
                   <div className="flex items-center gap-2">
                     <Coins className="text-amber-400" size={24} />
                     <div>
-                      <div className="text-xs text-slate-400">Balance</div>
+                      <div className="text-xs text-slate-400">Saldo</div>
                       <div className="text-xl font-bold text-amber-400">
-                        {profile?.balance.toFixed(0)}
+                        {formatMoney(profile?.balance ?? 0)}
                       </div>
                     </div>
                   </div>
@@ -221,5 +223,5 @@ export const CasinoLobby = () => {
         </AnimatePresence>
       </div>
     </div>
-  );
-};
+  )
+}

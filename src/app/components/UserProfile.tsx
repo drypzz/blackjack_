@@ -1,41 +1,38 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { LocalStorage, GameHistory } from '../lib/storage';
-import { ArrowLeft, TrendingUp, Trophy, Clock } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react'
+import { ArrowLeft, TrendingUp, Trophy, Clock } from 'lucide-react'
+import { motion } from 'framer-motion'
+
+import { useAuth } from '../contexts/AuthContext'
+import { LocalStorage, GameHistory } from '../lib/storage'
+import { formatMoney, formatDate } from '../utils/maskUtils'
 
 export const UserProfile = ({ onBack }: { onBack: () => void }) => {
-  const { profile } = useAuth();
-  const [gameHistory, setGameHistory] = useState<GameHistory[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { profile } = useAuth()
+  const [gameHistory, setGameHistory] = useState<GameHistory[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchGameHistory = () => {
-      if (!profile) return;
+      if (!profile) return
 
-      const data = LocalStorage.getGameHistoryForUser(profile.id, 20);
-      setGameHistory(data);
-      setLoading(false);
-    };
+      const data = LocalStorage.getGameHistoryForUser(profile.id, 20)
+      setGameHistory(data)
+      setLoading(false)
+    }
 
-    fetchGameHistory();
-  }, [profile]);
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-  };
+    fetchGameHistory()
+  }, [profile])
 
   const getGameIcon = (gameType: string) => {
     switch (gameType) {
-      case 'slots': return '🎰';
-      case 'roulette': return '🎡';
-      case 'blackjack': return '🃏';
-      default: return '🎲';
+      case 'slots': return '🎰'
+      case 'roulette': return '🎡'
+      case 'blackjack': return '🃏'
+      default: return '🎲'
     }
-  };
+  }
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -43,11 +40,11 @@ export const UserProfile = ({ onBack }: { onBack: () => void }) => {
       opacity: 1,
       transition: { staggerChildren: 0.1, delayChildren: 0.1 },
     },
-  };
+  }
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
-  };
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
@@ -63,7 +60,7 @@ export const UserProfile = ({ onBack }: { onBack: () => void }) => {
           className="mb-6 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors flex items-center gap-2"
         >
           <ArrowLeft size={20} />
-          Back to Lobby
+          Voltar ao lobby
         </motion.button>
 
         <motion.div variants={itemVariants} className="bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700 p-8 mb-6">
@@ -85,9 +82,9 @@ export const UserProfile = ({ onBack }: { onBack: () => void }) => {
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-amber-400">
-                    {profile?.balance.toFixed(0)}
+                    {formatMoney(profile?.balance ?? 0)}
                   </div>
-                  <div className="text-slate-400 text-sm">Current Balance</div>
+                  <div className="text-slate-400 text-sm">Saldo Atual</div>
                 </div>
               </div>
             </motion.div>
@@ -99,9 +96,9 @@ export const UserProfile = ({ onBack }: { onBack: () => void }) => {
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-blue-400">
-                    {profile?.total_won.toFixed(0)}
+                    {formatMoney(profile?.total_won ?? 0)}
                   </div>
-                  <div className="text-slate-400 text-sm">Total Won</div>
+                  <div className="text-slate-400 text-sm">Total ganho</div>
                 </div>
               </div>
             </motion.div>
@@ -113,9 +110,9 @@ export const UserProfile = ({ onBack }: { onBack: () => void }) => {
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-purple-400">
-                    {profile?.total_wagered.toFixed(0)}
+                    {formatMoney(profile?.total_wagered ?? 0)}
                   </div>
-                  <div className="text-slate-400 text-sm">Total Wagered</div>
+                  <div className="text-slate-400 text-sm">Total apostado</div>
                 </div>
               </div>
             </motion.div>
@@ -123,18 +120,18 @@ export const UserProfile = ({ onBack }: { onBack: () => void }) => {
         </motion.div>
 
         <motion.div variants={itemVariants} className="bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700 p-8">
-          <h2 className="text-2xl font-bold text-white mb-6">Game History</h2>
+          <h2 className="text-2xl font-bold text-white mb-6">Histórico de Jogos</h2>
 
           {loading ? (
-            <div className="text-center text-slate-400 py-8">Loading...</div>
+            <div className="text-center text-slate-400 py-8">Carregando...</div>
           ) : gameHistory.length === 0 ? (
-            <div className="text-center text-slate-400 py-8">No games played yet. Start playing to see your history!</div>
+            <div className="text-center text-slate-400 py-8">Nenhum jogo jogado ainda. Comece a jogar para ver seu histórico!</div>
           ) : (
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {gameHistory.map((game) => {
-                const profit = game.payout_amount - game.bet_amount;
-                const isWin = profit > 0;
-                const isPush = profit === 0 && game.payout_amount > 0;
+                const profit = game.payout_amount - game.bet_amount
+                const isWin = profit > 0
+                const isPush = profit === 0 && game.payout_amount > 0
 
                 return (
                   <div
@@ -168,12 +165,12 @@ export const UserProfile = ({ onBack }: { onBack: () => void }) => {
                       </div>
                     </div>
                   </div>
-                );
+                )
               })}
             </div>
           )}
         </motion.div>
       </motion.div>
     </div>
-  );
-};
+  )
+}
