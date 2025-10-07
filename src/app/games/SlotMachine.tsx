@@ -1,12 +1,12 @@
-"use client"
+'use client'
 
 import { useState } from 'react'
 import { Cherry, Grape, Citrus, DollarSign, Sparkles, ArrowLeft } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-import { useAuth } from '../contexts/AuthContext'
-import { LocalStorage } from '../lib/storage'
-import { formatMoney } from '../utils/maskUtils'
+import { useAuth } from '@/app/contexts/AuthContext'
+import { LocalStorage } from '@/app/lib/storage'
+import { formatMoney } from '@/app/utils/maskUtils'
 
 const SYMBOLS = [
   { id: 'cherry', icon: Cherry, color: 'text-red-500', weight: 40 },
@@ -20,14 +20,14 @@ const Reel = ({ finalSymbolId, isSpinning }: { finalSymbolId: string; isSpinning
     const symbolsToRender = isSpinning ? SYMBOLS : [SYMBOLS.find(s => s.id === finalSymbolId)!]
     
     return (
-        <div className="h-28 overflow-hidden bg-slate-900/80 rounded-xl flex items-center justify-center relative border-2 border-slate-700">
+        <div className='h-28 overflow-hidden bg-slate-900/80 rounded-xl flex items-center justify-center relative border-2 border-slate-700'>
             <motion.div
                 animate={{ y: isSpinning ? ['0%', '-100%'] : '0%' }}
                 transition={isSpinning ? { duration: 0.15, repeat: Infinity, ease: 'linear' } : { duration: 0.5, ease: 'easeOut' }}
             >
                 {SYMBOLS.map(s => {
                     const Icon = s.icon
-                    return <div key={s.id} className="h-28 flex items-center justify-center"><Icon size={64} className={s.color} strokeWidth={2.5} /></div>
+                    return <div key={s.id} className='h-28 flex items-center justify-center'><Icon size={64} className={s.color} strokeWidth={2.5} /></div>
                 })}
             </motion.div>
             
@@ -38,7 +38,7 @@ const Reel = ({ finalSymbolId, isSpinning }: { finalSymbolId: string; isSpinning
                         initial={{ opacity: 0, scale: 0.5 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.3 }}
-                        className="absolute"
+                        className='absolute'
                      >
                         {(() => {
                             const Icon = SYMBOLS.find(s => s.id === finalSymbolId)!.icon
@@ -121,36 +121,36 @@ export const SlotMachine = ({ onBack }: { onBack: () => void }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
-      <div className="max-w-2xl mx-auto">
-        <button onClick={onBack} className="mb-6 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors flex items-center gap-2">
+    <div className='min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6'>
+      <div className='max-w-2xl mx-auto'>
+        <button onClick={onBack} className='mb-6 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors flex items-center gap-2'>
             <ArrowLeft size={20} /> Voltar ao Lobby
         </button>
 
-        <div className="bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700 p-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-amber-400 mb-2 flex items-center justify-center gap-2">
+        <div className='bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700 p-8'>
+          <div className='text-center mb-8'>
+            <h2 className='text-3xl font-bold text-amber-400 mb-2 flex items-center justify-center gap-2'>
               <Sparkles size={32} /> Slot Machine
             </h2>
-            <p className="text-slate-400">Combine 3 símbolos para ganhar!</p>
+            <p className='text-slate-400'>Combine 3 símbolos para ganhar!</p>
           </div>
           
-          <div className="bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-xl p-8 mb-8 border-4 border-amber-500/30">
-            <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className='bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-xl p-8 mb-8 border-4 border-amber-500/30'>
+            <div className='grid grid-cols-3 gap-4 mb-6'>
               <Reel finalSymbolId={reels[0]} isSpinning={spinning} />
               <Reel finalSymbolId={reels[1]} isSpinning={spinning} />
               <Reel finalSymbolId={reels[2]} isSpinning={spinning} />
             </div>
 
-            {message && ( <div className="text-center text-xl font-bold py-2">{message}</div> )}
+            {message && ( <div className='text-center text-xl font-bold py-2'>{message}</div> )}
           </div>
           
-          <div className="space-y-4 mb-6">
+          <div className='space-y-4 mb-6'>
             <div>
-              <label className="block text-slate-300 mb-2">Valor da Aposta: {formatMoney(betAmount)}</label>
-              <input type="range" min="1" max={Math.min(100, profile?.balance || 0)} value={betAmount} onChange={(e) => setBetAmount(Number(e.target.value))} disabled={spinning} className="w-full ... accent-amber-500"/>
+              <label className='block text-slate-300 mb-2'>Valor da Aposta: {formatMoney(betAmount)}</label>
+              <input type='range' min='1' max={Math.min(100, profile?.balance || 0)} value={betAmount} onChange={(e) => setBetAmount(Number(e.target.value))} disabled={spinning} className='w-full ... accent-amber-500'/>
             </div>
-            <button onClick={spin} disabled={spinning || !profile || betAmount > (profile?.balance || 0)} className="w-full ...">
+            <button onClick={spin} disabled={spinning || !profile || betAmount > (profile?.balance || 0)} className='w-full ...'>
               {spinning ? 'Girando...' : 'Girar'}
             </button>
           </div>

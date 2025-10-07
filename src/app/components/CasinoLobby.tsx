@@ -4,12 +4,12 @@ import { useState } from 'react'
 import { motion, AnimatePresence, AnimationGeneratorType, easeInOut } from 'framer-motion'
 import { Sparkles, CircleDot, Spade, LogOut, User, Coins } from 'lucide-react'
 
-import { UserProfile } from './UserProfile'
-import { useAuth } from '../contexts/AuthContext'
-import { SlotMachine } from '../games/SlotMachine'
-import { Roulette } from '../games/Roulette'
-import { Blackjack } from '../games/Blackjack'
-import { formatMoney } from '../utils/maskUtils'
+import { UserProfile } from '@/app/components/UserProfile'
+import { useAuth } from '@/app/contexts/AuthContext'
+import { SlotMachine } from '@/app/games/SlotMachine'
+import { Roulette } from '@/app/games/Roulette'
+import { Blackjack } from '@/app/games/Blackjack'
+import { formatMoney } from '@/app/utils/maskUtils'
 
 type GameType = 'lobby' | 'slots' | 'roulette' | 'blackjack' | 'profile'
 
