@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react'
 import { ArrowLeft, TrendingUp, Trophy, Clock } from 'lucide-react'
 import { motion } from 'framer-motion'
 
-import { useAuth } from '../contexts/AuthContext'
-import { LocalStorage, GameHistory } from '../lib/storage'
-import { formatMoney, formatDate } from '../utils/maskUtils'
+import { useAuth } from '@/app/contexts/AuthContext'
+import { LocalStorage, GameHistory } from '@/app/lib/storage'
+import { formatMoney, formatDate } from '@/app/utils/maskUtils'
 
 export const UserProfile = ({ onBack }: { onBack: () => void }) => {
   const { profile } = useAuth()

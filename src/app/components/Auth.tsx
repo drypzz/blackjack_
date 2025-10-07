@@ -29,8 +29,12 @@ export const Auth = () => {
         }
         await signUp(email, password, username)
       }
-    } catch (err: any) {
-      setError(err.message || 'Ocorreu um erro')
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError('Ocorreu um erro')
+      }
     } finally {
       setLoading(false)
     }
