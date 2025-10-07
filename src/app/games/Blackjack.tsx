@@ -1,11 +1,12 @@
 "use client"
 
 import { useState } from 'react'
-import { useAuth } from '../contexts/AuthContext'
-import { LocalStorage } from '../lib/storage'
 import { Spade, ArrowLeft, Heart, Diamond, Club } from 'lucide-react'
 import { motion, AnimatePresence, Variants } from 'framer-motion'
-import { formatMoney } from '../utils/maskUtils'
+
+import { useAuth } from '@/app/contexts/AuthContext'
+import { LocalStorage } from '@/app/lib/storage'
+import { formatMoney } from '@/app/utils/maskUtils'
 
 type Card = {
   suit: string
