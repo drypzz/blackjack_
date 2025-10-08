@@ -1,11 +1,16 @@
 'use client'
 
-import { useState, forwardRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { LogIn, UserPlus, AtSign, Lock, AlertTriangle, User } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useState, forwardRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { LogIn, UserPlus, AtSign, Lock, AlertTriangle, User } from 'lucide-react'
 
-const AuthInput = forwardRef<HTMLInputElement, any>(({ icon, ...props }, ref) => (
+import { useAuth } from '@/app/contexts/AuthContext'
+
+type AuthInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
+  icon: React.ReactNode
+}
+
+const AuthInput = forwardRef<HTMLInputElement, AuthInputProps>(({ icon, ...props }, ref) => (
   <div className="relative border border-slate-600 rounded-lg transition-colors focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/50">
     <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
       {icon}
@@ -16,7 +21,9 @@ const AuthInput = forwardRef<HTMLInputElement, any>(({ icon, ...props }, ref) =>
       className="w-full pl-10 pr-4 py-2 bg-transparent rounded-lg focus:outline-none text-white placeholder-slate-500"
     />
   </div>
-));
+))
+
+AuthInput.displayName = "AuthInput"
 
 const Spinner = () => (
   <motion.div
@@ -24,37 +31,40 @@ const Spinner = () => (
     animate={{ rotate: 360 }}
     transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
   />
-);
-
+)
 
 export const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const [isLogin, setIsLogin] = useState(true)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [username, setUsername] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { signIn, signUp } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+    e.preventDefault()
+    setError('')
+    setLoading(true)
     try {
       if (isLogin) {
-        await signIn(email, password);
+        await signIn(email, password)
       } else {
         if (!username.trim()) {
-          throw new Error('Nome de usuário é obrigatório');
+          throw new Error('Nome de usuário é obrigatório')
         }
-        await signUp(email, password, username);
+        await signUp(email, password, username)
       }
-    } catch (err: any) {
-      setError(err.message || 'Ocorreu um erro');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError('Ocorreu um erro')
+      }
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
@@ -158,8 +168,8 @@ export const Auth = () => {
         <div className="mt-6 text-center">
           <button
             onClick={() => {
-              setIsLogin(!isLogin);
-              setError('');
+              setIsLogin(!isLogin)
+              setError('')
             }}
             className="text-amber-400 hover:text-amber-300 text-sm transition-colors hover:underline"
           >

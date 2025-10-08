@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '../contexts/AuthContext'
-import { LocalStorage } from '../lib/storage'
 import { Spade, ArrowLeft, Heart, Diamond, Club, X, Hand, Plus, RefreshCw } from 'lucide-react'
 import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/solid'
 import { motion, AnimatePresence, Variants } from 'framer-motion'
-import { formatMoney } from '../utils/maskUtils'
+
+import { ConfettiComponent } from '@/app/components/Confetti'
+import { useAuth } from '@/app/contexts/AuthContext'
+import { LocalStorage } from '@/app/lib/storage'
+import { formatMoney } from '@/app/utils/maskUtils'
 
 type Card = {
   suit: string
@@ -64,40 +66,6 @@ const CardComponent = ({ card, hidden }: { card: Card | null; hidden?: boolean }
   )
 }
 
-const Confetti = () => {
-  const colors = ['#fde047', '#f97316', '#10b981', '#3b82f6', '#ec4899']
-  const confetti = Array.from({ length: 50 }).map((_, i) => ({
-    id: i,
-    color: colors[i % colors.length],
-    x: Math.random() * 100,
-    y: Math.random() * -150 - 50,
-    rotate: Math.random() * 360,
-    scale: Math.random() * 0.5 + 0.5,
-    duration: Math.random() * 3 + 4,
-    delay: Math.random() * 2,
-  }))
-
-  return (
-    <div className='absolute inset-0 overflow-hidden pointer-events-none z-10'>
-      {confetti.map(c => (
-        <motion.div
-          key={c.id}
-          className='absolute rounded-full'
-          style={{
-            backgroundColor: c.color,
-            left: `${c.x}%`,
-            width: `${c.scale * 12}px`,
-            height: `${c.scale * 12}px`
-          }}
-          initial={{ y: c.y, opacity: 0 }}
-          animate={{ y: '120vh', rotate: c.rotate, opacity: [1, 1, 0] }}
-          transition={{ duration: c.duration, delay: c.delay, ease: 'linear', repeat: Infinity }}
-        />
-      ))}
-    </div>
-  )
-}
-
 const ResultModal = ({ info, onClose }: { info: ModalInfo; onClose: () => void }) => {
   if (!info) return null
 
@@ -147,6 +115,20 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
   const [warningMessage, setWarningMessage] = useState('')
   const [winner, setWinner] = useState<Winner>(null)
   const [modalInfo, setModalInfo] = useState<ModalInfo>(null)
+  const [canPlayAgain, setCanPlayAgain] = useState(false)
+
+  const handleBetAmountChange = (value: number | string) => {
+    if (value === '') {
+      setBetAmount(10)
+      return
+    }
+    
+    const numValue = Number(value)
+    if (profile && !isNaN(numValue)) {
+      const clampedValue = Math.min(numValue, profile.balance)
+      setBetAmount(clampedValue)
+    }
+  }
 
   const createDeck = (): Card[] => {
     const newDeck: Card[] = []
@@ -304,7 +286,7 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
 
     if (playerScore > 21) {
       tempWinner = 'dealer'
-      tempModalInfo = { type: 'loss', title: 'Você Perdeu!', message: `Você estourou com ${playerScore} pontos. O objetivo é chegar o mais perto de 21, sem passar.` }
+      tempModalInfo = { type: 'loss', title: 'Não foi dessa vez!', message: `Você estourou com ${playerScore} pontos. O objetivo é chegar o mais perto de 21, sem passar.` }
     } else if (blackjack && dealerScore !== 21) {
       payout = betAmount * 2.5
       tempWinner = 'player'
@@ -319,7 +301,7 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
       tempModalInfo = { type: 'win', title: 'Você Ganhou!', message: `Sua pontuação (${playerScore}) foi maior que a do dealer (${dealerScore}).` }
     } else if (playerScore < dealerScore) {
       tempWinner = 'dealer'
-      tempModalInfo = { type: 'loss', title: 'Você Perdeu!', message: `A pontuação do dealer (${dealerScore}) foi maior que a sua (${playerScore}).` }
+      tempModalInfo = { type: 'loss', title: 'Não foi dessa vez!', message: `A pontuação do dealer (${dealerScore}) foi maior que a sua (${playerScore}).` }
     } else {
       payout = betAmount
       tempWinner = 'push'
@@ -365,6 +347,12 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
     setDealerVisibleScore(0)
     setWinner(null)
     setModalInfo(null)
+    setCanPlayAgain(false)
+  }
+
+  const handleModalClose = () => {
+    setModalInfo(null)
+    setCanPlayAgain(true)
   }
 
   useEffect(() => {
@@ -400,7 +388,7 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
   return (
     <main className='min-h-screen from-slate-900 via-gray-900 to-slate-900 p-4 md:p-6 text-white font-sans'>
       <AnimatePresence>
-        {modalInfo && <ResultModal info={modalInfo} onClose={() => setModalInfo(null)} />}
+        {modalInfo && <ResultModal info={modalInfo} onClose={handleModalClose} />}
       </AnimatePresence>
 
       <div className='max-w-5xl mx-auto'>
@@ -418,12 +406,35 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className='space-y-6 max-w-sm mx-auto'>
               <div>
                 <label className='block text-slate-300 mb-2 text-center text-lg'>Valor da Aposta: <span className='font-bold text-amber-400 text-xl'>{formatMoney(betAmount)}</span></label>
-                <input
-                  type='range' min='10' max={Math.max(10, profile?.balance ?? 10)} step='10' value={betAmount}
-                  onChange={(e) => setBetAmount(Number(e.target.value))}
-                  className='w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500'
-                />
+                <div className='flex items-center gap-4 mb-4'>
+                  <input
+                    type='number' min='10' max={Math.max(10, profile?.balance ?? 10)} step='10' value={betAmount}
+                    onChange={(e) => handleBetAmountChange(Number(e.target.value))}
+                    onBlur={() => { if(Number(betAmount) < 1 || betAmount === 10) handleBetAmountChange(10) }}
+                    className='w-32 bg-slate-900/70 border-2 border-slate-600 rounded-lg text-amber-400 text-center text-xl font-bold py-2 px-2 focus:ring-2 focus:ring-amber-500 focus:outline-none appearance-none'
+                    placeholder='10'
+                  />
+                  <input
+                    type='range' min='10' max={Math.max(10, profile?.balance ?? 10)} step='10' value={betAmount}
+                    onChange={(e) => handleBetAmountChange(Number(e.target.value))}
+                    className='w-full h-3 bg-slate-700 rounded-lg cursor-pointer accent-amber-500'
+                  />
+                </div>
               </div>
+              <div className='flex justify-center gap-2 mt-3'>
+                <button onClick={() => handleBetAmountChange(Math.floor(Number(betAmount) / 2))} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>½</button>
+                <button onClick={() => handleBetAmountChange(Number(betAmount) * 2)} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>2x</button>
+                <button onClick={() => handleBetAmountChange(Number(betAmount) + 10)} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>+10</button>
+                <button onClick={() => handleBetAmountChange(Number(betAmount) + 100)} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>+100</button>
+                <button onClick={() => handleBetAmountChange(Number(betAmount) + 500)} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>+500</button>
+              </div>
+              <div className='flex justify-center gap-2 mt-3'>
+                <button onClick={() => handleBetAmountChange(Number(betAmount) + 1000)} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>+1000</button>
+                <button onClick={() => handleBetAmountChange(Number(betAmount) + 2000)} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>+2000</button>
+                <button onClick={() => handleBetAmountChange(Number(betAmount) + 5000)} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>+5000</button>
+                <button onClick={() => handleBetAmountChange(profile?.balance || 0)} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>Max</button>
+              </div>
+
               <button
                 onClick={dealInitialCards}
                 disabled={!profile || betAmount > (profile?.balance || 0)}
@@ -435,7 +446,7 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
           ) : (
             <div className='space-y-6'>
               <div className='bg-green-900/20 rounded-t-full border-4 border-amber-800/50 p-6 min-h-[220px] relative overflow-hidden'>
-                {winner === 'dealer' && <Confetti />}
+                {winner === 'dealer' && <ConfettiComponent />}
                 <div className='flex justify-center items-center mb-4'>
                   <h3 className='text-xl font-semibold text-slate-300'>Dealer</h3>
                   <span className='text-lg text-amber-400 font-semibold bg-slate-900/50 px-3 py-1 rounded-md flex items-center gap-1'>
@@ -472,7 +483,7 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
               </div>
 
               <div className='bg-green-900/20 rounded-b-full border-4 border-amber-800/50 p-6 min-h-[220px] relative overflow-hidden'>
-                {winner === 'player' && <Confetti />}
+                {winner === 'player' && <ConfettiComponent />}
                 <div className='flex justify-center items-center mb-4'>
                   <h3 className='text-xl font-semibold text-slate-300'>Você</h3>
                   <span className='text-lg text-amber-400 font-semibold bg-slate-900/50 px-3 py-1 rounded-md flex items-center gap-1'>
@@ -520,11 +531,12 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
                     </button>
                   </motion.div>
                 )}
-                {gameState === 'finished' && !modalInfo && (
-                  <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1, transition: { delay: 0.5 } }} className='w-full max-w-md'>
+                {gameState === 'finished' && (
+                  <motion.div initial={{ opacity: 0.5, scale: 0.8 }} animate={{ opacity: 1, scale: 1, transition: { delay: 0.5 } }} className='w-full max-w-md'>
                     <button
                       onClick={newGame}
-                      className='cursor-pointer w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-900 font-bold py-3 rounded-xl shadow-lg hover:shadow-amber-500/30 hover:scale-105 transition-all text-base sm:text-lg uppercase tracking-wider'
+                      disabled={!canPlayAgain}
+                      className='cursor-pointer w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:from-slate-600 disabled:to-slate-600 text-slate-900 font-bold py-4 rounded-xl transition-all duration-200 disabled:cursor-not-allowed shadow-lg hover:shadow-amber-500/30 text-xl uppercase tracking-widest flex items-center justify-center gap-2'
                     >
                       <RefreshCw size={20} strokeWidth={3} />
                       Novo Jogo

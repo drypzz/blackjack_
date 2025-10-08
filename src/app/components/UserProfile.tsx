@@ -1,30 +1,30 @@
 'use client'
 
-import { useState, useEffect } from 'react';
-import { ArrowLeft, TrendingUp, Trophy, Coins, History, FileText, Sparkles, CircleDot, Spade } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../contexts/AuthContext';
-import { LocalStorage, GameHistory } from '../lib/storage';
-import { formatMoney, formatDate } from '../utils/maskUtils';
+import { useState, useEffect } from 'react'
+import { ArrowLeft, TrendingUp, Trophy, Coins, History, FileText, Sparkles, CircleDot, Spade } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useAuth } from '../contexts/AuthContext'
+import { LocalStorage, GameHistory } from '../lib/storage'
+import { formatMoney, formatDate } from '../utils/maskUtils'
 
 const HistoryItem = ({ game }: { game: GameHistory }) => {
-  const profit = game.payout_amount - game.bet_amount;
-  const isWin = profit > 0;
-  const isPush = profit === 0 && game.payout_amount > 0;
+  const profit = game.payout_amount - game.bet_amount
+  const isWin = profit > 0
+  const isPush = profit === 0 && game.payout_amount > 0
 
   const icons: { [key: string]: React.ReactNode } = {
     slots: <Sparkles size={24} className="text-amber-400" />,
     roulette: <CircleDot size={24} className="text-red-400" />,
     blackjack: <Spade size={24} className="text-blue-400" />,
-  };
+  }
 
   const colors = {
     win: 'text-green-400 border-green-500/30 bg-green-500/10',
     loss: 'text-red-400 border-red-500/30 bg-red-500/10',
     push: 'text-blue-400 border-blue-500/30 bg-blue-500/10'
-  };
+  }
 
-  const gameStatus = isWin ? 'win' : isPush ? 'push' : 'loss';
+  const gameStatus = isWin ? 'win' : isPush ? 'push' : 'loss'
 
   return (
     <div className={`p-3 sm:p-4 rounded-lg border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${colors[gameStatus]}`}>
@@ -59,15 +59,15 @@ const HistoryItem = ({ game }: { game: GameHistory }) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
 type StatCardProps = {
-  icon: React.ReactNode;
-  label: string;
-  value: string | number;
-  colorClass: string;
-};
+  icon: React.ReactNode
+  label: string
+  value: string | number
+  colorClass: string
+}
 
 const StatCard = ({ icon, label, value, colorClass }: StatCardProps) => (
   <div className="bg-slate-900/50 p-4 rounded-xl flex items-center gap-4">
@@ -79,32 +79,32 @@ const StatCard = ({ icon, label, value, colorClass }: StatCardProps) => (
       <div className="text-slate-400 text-sm">{label}</div>
     </div>
   </div>
-);
+)
 
 export const UserProfile = ({ onBack }: { onBack: () => void }) => {
-  const { profile } = useAuth();
-  const [gameHistory, setGameHistory] = useState<GameHistory[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { profile } = useAuth()
+  const [gameHistory, setGameHistory] = useState<GameHistory[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (profile) {
-      setGameHistory(LocalStorage.getGameHistoryForUser(profile.id, 20));
-      setLoading(false);
+      setGameHistory(LocalStorage.getGameHistoryForUser(profile.id, 20))
+      setLoading(false)
     }
-  }, [profile]);
+  }, [profile])
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
-  };
+  }
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: { y: 0, opacity: 1, transition: { type: "spring" as const, stiffness: 100 } },
-  };
+  }
 
-  const netProfit = (profile?.total_won ?? 0) - (profile?.total_wagered ?? 0);
-  const winRate = profile?.total_wagered ? ((profile.total_won / profile.total_wagered) * 100).toFixed(1) + '%' : 'N/A';
+  const netProfit = (profile?.total_won ?? 0) - (profile?.total_wagered ?? 0)
+  const winRate = profile?.total_wagered ? ((profile.total_won / profile.total_wagered) * 100).toFixed(1) + '%' : 'N/A'
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6 text-white">
@@ -179,5 +179,5 @@ export const UserProfile = ({ onBack }: { onBack: () => void }) => {
         </motion.div>
       </motion.div>
     </div>
-  );
-};
+  )
+}
