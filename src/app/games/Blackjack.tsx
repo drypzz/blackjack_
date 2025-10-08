@@ -21,6 +21,7 @@ type ModalInfo = {
   type: 'win' | 'loss' | 'push'
   title: string
   message: string
+  amount?: number
 } | null
 
 const SUITS = ['♠', '♥', '♦', '♣']
@@ -98,6 +99,11 @@ const ResultModal = ({ info, onClose }: { info: ModalInfo; onClose: () => void }
         <button onClick={onClose} className='cursor-pointer absolute top-3 right-3 text-slate-400 hover:text-white transition-colors'><X size={24} /></button>
         <div className='flex justify-center mb-4'>{icons[info.type]}</div>
         <h2 className='text-3xl font-bold text-white mb-2'>{info.title}</h2>
+        {info.amount && info.amount > 0 && info.type !== 'push' && (
+          <p className='text-4xl font-bold text-emerald-400 my-4'>
+            +{formatMoney(info.amount)}
+          </p>
+        )}
         <p className='text-slate-300 text-lg'>{info.message}</p>
       </motion.div>
     </motion.div>
@@ -109,7 +115,7 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
   const [deck, setDeck] = useState<Card[]>([])
   const [playerHand, setPlayerHand] = useState<Card[]>([])
   const [dealerHand, setDealerHand] = useState<Card[]>([])
-  const [betAmount, setBetAmount] = useState(10)
+  const [betAmount, setBetAmount] = useState<number | string>(10)
   const [gameState, setGameState] = useState<GameState>('betting')
   const [dealerVisibleScore, setDealerVisibleScore] = useState(0)
   const [warningMessage, setWarningMessage] = useState('')
@@ -119,14 +125,21 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
 
   const handleBetAmountChange = (value: number | string) => {
     if (value === '') {
-      setBetAmount(10)
+      setBetAmount('')
       return
     }
-    
+
     const numValue = Number(value)
     if (profile && !isNaN(numValue)) {
       const clampedValue = Math.min(numValue, profile.balance)
       setBetAmount(clampedValue)
+    }
+  }
+
+  const handleBetBlur = () => {
+    const numericValue = Number(betAmount)
+    if (isNaN(numericValue) || numericValue < 10) {
+      setBetAmount(10)
     }
   }
 
@@ -154,21 +167,21 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
   }
 
   const dealInitialCards = async () => {
-    if (!profile || betAmount > profile.balance) {
+    if (!profile || Number(betAmount) > profile.balance) {
       setWarningMessage('Saldo insuficiente!')
       setTimeout(() => setWarningMessage(''), 3000)
       return
     }
-    if (betAmount < 1) {
+    if (Number(betAmount) < 1) {
       setWarningMessage('Aposta mínima é 1 crédito')
       setTimeout(() => setWarningMessage(''), 3000)
       return
     }
 
-    const newBalance = profile.balance - betAmount
+    const newBalance = profile.balance - Number(betAmount)
     await LocalStorage.updateProfile(profile.id, {
       balance: newBalance,
-      total_wagered: profile.total_wagered + betAmount,
+      total_wagered: profile.total_wagered + Number(betAmount),
     })
     refreshProfile()
 
@@ -286,26 +299,53 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
 
     if (playerScore > 21) {
       tempWinner = 'dealer'
-      tempModalInfo = { type: 'loss', title: 'Não foi dessa vez!', message: `Você estourou com ${playerScore} pontos. O objetivo é chegar o mais perto de 21, sem passar.` }
+      tempModalInfo = { 
+        type: 'loss',
+        title: 'Não foi dessa vez!',
+        message: `Você estourou com ${playerScore} pontos.`,
+      }
     } else if (blackjack && dealerScore !== 21) {
-      payout = betAmount * 2.5
+      payout = Number(betAmount) * 2.5
       tempWinner = 'player'
-      tempModalInfo = { type: 'win', title: 'Blackjack!', message: 'Você conseguiu 21 com suas duas primeiras cartas! Este é o melhor resultado possível.' }
+      tempModalInfo = {
+        type: 'win',
+        title: 'Blackjack!',
+        message: 'Você conseguiu 21 com as duas primeiras cartas!',
+        amount: payout,
+      }
     } else if (dealerScore > 21) {
-      payout = betAmount * 2
+      payout = Number(betAmount) * 2
       tempWinner = 'player'
-      tempModalInfo = { type: 'win', title: 'Você Ganhou!', message: `O dealer estourou com ${dealerScore} pontos. Você ganha automaticamente.` }
+      tempModalInfo = {
+        type: 'win',
+        title: 'Você Ganhou!',
+        message: `O dealer estourou com ${dealerScore} pontos.`,
+        amount: payout,
+      }
     } else if (playerScore > dealerScore) {
-      payout = betAmount * 2
+      payout = Number(betAmount) * 2
       tempWinner = 'player'
-      tempModalInfo = { type: 'win', title: 'Você Ganhou!', message: `Sua pontuação (${playerScore}) foi maior que a do dealer (${dealerScore}).` }
+      tempModalInfo = { 
+        type: 'win',
+        title: 'Você Ganhou!',
+        message: `Sua pontuação (${playerScore}) foi maior que a do dealer (${dealerScore}).`,
+        amount: payout,
+      }
     } else if (playerScore < dealerScore) {
       tempWinner = 'dealer'
-      tempModalInfo = { type: 'loss', title: 'Não foi dessa vez!', message: `A pontuação do dealer (${dealerScore}) foi maior que a sua (${playerScore}).` }
+      tempModalInfo = {
+        type: 'loss',
+        title: 'Não foi dessa vez!',
+        message: `A pontuação do dealer (${dealerScore}) foi maior que a sua (${playerScore}).`,
+      }
     } else {
-      payout = betAmount
+      payout = Number(betAmount)
       tempWinner = 'push'
-      tempModalInfo = { type: 'push', title: 'Empate!', message: `Ambos fizeram ${playerScore} pontos. Sua aposta foi devolvida.` }
+      tempModalInfo = {
+        type: 'push',
+        title: 'Empate!',
+        message: `Ambos fizeram ${playerScore} pontos. Sua aposta foi devolvida.`,
+      }
     }
 
     setWinner(tempWinner)
@@ -315,13 +355,13 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
       const newBalance = profile.balance + payout
       await LocalStorage.updateProfile(profile.id, {
         balance: newBalance,
-        total_won: profile.total_won + (payout > betAmount ? payout - betAmount : 0),
+        total_won: profile.total_won + payout,
       })
 
       await LocalStorage.addGameHistory({
         user_id: profile.id,
         game_type: 'blackjack',
-        bet_amount: betAmount,
+        bet_amount: Number(betAmount),
         payout_amount: payout,
         game_data: { playerHand: pHand, dealerHand: dHand, playerScore, dealerScore },
       })
@@ -330,7 +370,7 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
       await LocalStorage.addGameHistory({
         user_id: profile.id,
         game_type: 'blackjack',
-        bet_amount: betAmount,
+        bet_amount: Number(betAmount),
         payout_amount: 0,
         game_data: { playerHand: pHand, dealerHand: dHand, playerScore, dealerScore },
       })
@@ -405,18 +445,18 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
           {gameState === 'betting' ? (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className='space-y-6 max-w-sm mx-auto'>
               <div>
-                <label className='block text-slate-300 mb-2 text-center text-lg'>Valor da Aposta: <span className='font-bold text-amber-400 text-xl'>{formatMoney(betAmount)}</span></label>
+                <label className='block text-slate-300 mb-2 text-center text-lg'>Valor da Aposta: <span className='font-bold text-amber-400 text-xl'>{formatMoney(Number(betAmount))}</span></label>
                 <div className='flex items-center gap-4 mb-4'>
                   <input
                     type='number' min='10' max={Math.max(10, profile?.balance ?? 10)} step='10' value={betAmount}
-                    onChange={(e) => handleBetAmountChange(Number(e.target.value))}
-                    onBlur={() => { if(Number(betAmount) < 1 || betAmount === 10) handleBetAmountChange(10) }}
+                    onChange={(e) => handleBetAmountChange(e.target.value)}
+                    onBlur={handleBetBlur}
                     className='w-32 bg-slate-900/70 border-2 border-slate-600 rounded-lg text-amber-400 text-center text-xl font-bold py-2 px-2 focus:ring-2 focus:ring-amber-500 focus:outline-none appearance-none'
                     placeholder='10'
                   />
                   <input
                     type='range' min='10' max={Math.max(10, profile?.balance ?? 10)} step='10' value={betAmount}
-                    onChange={(e) => handleBetAmountChange(Number(e.target.value))}
+                    onChange={(e) => handleBetAmountChange(e.target.value)}
                     className='w-full h-3 bg-slate-700 rounded-lg cursor-pointer accent-amber-500'
                   />
                 </div>
@@ -437,7 +477,7 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
 
               <button
                 onClick={dealInitialCards}
-                disabled={!profile || betAmount > (profile?.balance || 0)}
+                disabled={!profile || Number(betAmount) > (profile?.balance || 0)}
                 className='cursor-pointer w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:from-slate-600 disabled:to-slate-600 text-slate-900 font-bold py-4 rounded-xl transition-all duration-200 disabled:cursor-not-allowed shadow-lg hover:shadow-amber-500/30 text-xl uppercase tracking-widest'
               >
                 Apostar

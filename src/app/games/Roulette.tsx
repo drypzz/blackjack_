@@ -191,7 +191,7 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
 
         if (won) {
           payout = numericBetAmount * 2
-          const netWin = payout - numericBetAmount
+          const netWin = payout
           
           modalData = {
             type: 'win',
@@ -204,7 +204,7 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
           const finalBalance = newBalanceAfterBet + payout
           await LocalStorage.updateProfile(profile.id, {
             balance: finalBalance,
-            total_won: profile.total_won + netWin,
+            total_won: profile.total_won + payout,
           })
         } else {
           payout = 0
