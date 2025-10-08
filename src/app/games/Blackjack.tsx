@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Spade, ArrowLeft, Heart, Diamond, Club, X, Hand, Plus, RefreshCw } from 'lucide-react'
 import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/solid'
 import { motion, AnimatePresence, Variants } from 'framer-motion'
@@ -9,6 +9,7 @@ import { ConfettiComponent } from '@/app/components/Confetti'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { LocalStorage } from '@/app/lib/storage'
 import { formatMoney } from '@/app/utils/maskUtils'
+
 
 type Card = {
   suit: string
@@ -186,28 +187,26 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
     refreshProfile()
 
     const tempDeck = createDeck()
+
+    // Mão forçada para sempre dar Blackjack ao jogador.
+    // Lembre-se de remover/comentar esta parte após os testes.
+    // const tempPlayerHand = [
+    //   { suit: '♠', value: 'A', numValue: 11 },
+    //   { suit: '♥', value: 'K', numValue: 10 }
+    // ]
+
     const tempPlayerHand = [tempDeck.pop()!, tempDeck.pop()!]
 
     const winningStreak = checkWinningStreak()
     let tempDealerHand: Card[]
 
     if (winningStreak >= 3) {
-      console.log(`MODO DIFÍCIL ATIVADO! Sequência de ${winningStreak} vitórias.`)
+      // console.log(`MODO DIFÍCIL ATIVADO! Sequência de ${winningStreak} vitórias.`)
       tempDealerHand = getRiggedDealerHand(tempDeck)
     } else {
       const holeCard = tempDeck.pop()!
       const upCard = tempDeck.pop()!
       tempDealerHand = [holeCard, upCard]
-    }
-
-    if (calculateScore(tempPlayerHand) === 21 && winningStreak < 3) {
-      const dealerNeeds = 21 - calculateScore(tempDealerHand)
-      const favorableCardIndex = tempDeck.findIndex(card => card.numValue === dealerNeeds || calculateScore(tempDealerHand) + card.numValue >= 17)
-      if (favorableCardIndex > -1) {
-        const favorableCard = tempDeck.splice(favorableCardIndex, 1)[0]
-        tempDeck.push(tempDealerHand[0])
-        tempDealerHand[0] = favorableCard
-      }
     }
 
     setDeck(tempDeck)
@@ -217,7 +216,7 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
     setWarningMessage('')
 
     if (calculateScore(tempPlayerHand) === 21) {
-      setTimeout(() => stand(tempPlayerHand), 1000)
+      stand(tempPlayerHand)
     }
   }
 
@@ -244,7 +243,7 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
         if (score >= 19 && score <= 21) {
           const card1 = deck.splice(j, 1)[0]
           const card2 = deck.splice(i, 1)[0]
-          console.log(`Mão do Dealer manipulada para ter ${score} pontos.`)
+          // console.log(`Mão do Dealer manipulada para ter ${score} pontos.`)
           return [card2, card1]
         }
       }
@@ -259,7 +258,9 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
     setPlayerHand(newHand)
     setDeck([...deck])
     const score = calculateScore(newHand)
+
     if (score > 21) {
+      setGameState('finished');
       setTimeout(() => finishGame(newHand, dealerHand), 1000)
     } else if (score === 21) {
       stand(newHand)
@@ -288,7 +289,7 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
     }, 800)
   }
 
-  const finishGame = async (pHand: Card[], dHand: Card[], blackjack = false) => {
+  const finishGame = async (pHand: Card[], dHand: Card[]) => {
     setGameState('finished')
     const playerScore = calculateScore(pHand)
     const dealerScore = calculateScore(dHand)
@@ -297,21 +298,34 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
     let tempWinner: Winner = null
     let tempModalInfo: ModalInfo = null
 
-    if (playerScore > 21) {
+    const isPlayerBlackjack = playerScore === 21 && pHand.length === 2
+    const isDealerBlackjack = dealerScore === 21 && dHand.length === 2
+
+    if (isPlayerBlackjack) {
+      if (isDealerBlackjack) {
+        payout = Number(betAmount)
+        tempWinner = 'push'
+        tempModalInfo = {
+          type: 'push',
+          title: 'Empate de Blackjack!',
+          message: 'Ambos fizeram Blackjack. Sua aposta foi devolvida.',
+        }
+      } else {
+        payout = Number(betAmount) * 2.5
+        tempWinner = 'player'
+        tempModalInfo = {
+          type: 'win',
+          title: 'Blackjack!',
+          message: 'Você conseguiu 21 com as duas primeiras cartas!',
+          amount: payout,
+        }
+      }
+    } else if (playerScore > 21) {
       tempWinner = 'dealer'
-      tempModalInfo = { 
+      tempModalInfo = {
         type: 'loss',
         title: 'Não foi dessa vez!',
         message: `Você estourou com ${playerScore} pontos.`,
-      }
-    } else if (blackjack && dealerScore !== 21) {
-      payout = Number(betAmount) * 2.5
-      tempWinner = 'player'
-      tempModalInfo = {
-        type: 'win',
-        title: 'Blackjack!',
-        message: 'Você conseguiu 21 com as duas primeiras cartas!',
-        amount: payout,
       }
     } else if (dealerScore > 21) {
       payout = Number(betAmount) * 2
@@ -325,7 +339,7 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
     } else if (playerScore > dealerScore) {
       payout = Number(betAmount) * 2
       tempWinner = 'player'
-      tempModalInfo = { 
+      tempModalInfo = {
         type: 'win',
         title: 'Você Ganhou!',
         message: `Sua pontuação (${playerScore}) foi maior que a do dealer (${dealerScore}).`,
@@ -352,9 +366,8 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
     setTimeout(() => setModalInfo(tempModalInfo), 1200)
 
     if (profile && payout > 0) {
-      const newBalance = profile.balance + payout
       await LocalStorage.updateProfile(profile.id, {
-        balance: newBalance,
+        balance: profile.balance + payout,
         total_won: profile.total_won + payout,
       })
 
@@ -401,7 +414,7 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
       return
     }
     if (gameState === 'playing') {
-      setDealerVisibleScore(calculateScore([dealerHand[1]]))
+      setDealerVisibleScore(dealerHand[1].numValue)
     } else {
       setDealerVisibleScore(calculateScore(dealerHand))
     }
@@ -462,17 +475,17 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
                 </div>
               </div>
               <div className='flex justify-center gap-2 mt-3'>
-                <button onClick={() => handleBetAmountChange(Math.floor(Number(betAmount) / 2))} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>½</button>
-                <button onClick={() => handleBetAmountChange(Number(betAmount) * 2)} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>2x</button>
-                <button onClick={() => handleBetAmountChange(Number(betAmount) + 10)} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>+10</button>
-                <button onClick={() => handleBetAmountChange(Number(betAmount) + 100)} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>+100</button>
-                <button onClick={() => handleBetAmountChange(Number(betAmount) + 500)} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>+500</button>
+                <button onClick={() => handleBetAmountChange(Math.floor(Number(betAmount) / 2))} className='px-4 py-1 cursor-pointer bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>½</button>
+                <button onClick={() => handleBetAmountChange(Number(betAmount) * 2)} className='px-4 cursor-pointer py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>2x</button>
+                <button onClick={() => handleBetAmountChange(Number(betAmount) + 10)} className='px-4 cursor-pointer py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>+10</button>
+                <button onClick={() => handleBetAmountChange(Number(betAmount) + 100)} className='px-4 cursor-pointer py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>+100</button>
+                <button onClick={() => handleBetAmountChange(Number(betAmount) + 500)} className='px-4 cursor-pointer py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>+500</button>
               </div>
               <div className='flex justify-center gap-2 mt-3'>
-                <button onClick={() => handleBetAmountChange(Number(betAmount) + 1000)} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>+1000</button>
-                <button onClick={() => handleBetAmountChange(Number(betAmount) + 2000)} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>+2000</button>
-                <button onClick={() => handleBetAmountChange(Number(betAmount) + 5000)} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>+5000</button>
-                <button onClick={() => handleBetAmountChange(profile?.balance || 0)} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>Max</button>
+                <button onClick={() => handleBetAmountChange(Number(betAmount) + 1000)} className='px-4 cursor-pointer py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>+1000</button>
+                <button onClick={() => handleBetAmountChange(Number(betAmount) + 2000)} className='px-4 cursor-pointer py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>+2000</button>
+                <button onClick={() => handleBetAmountChange(Number(betAmount) + 5000)} className='px-4 cursor-pointer py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>+5000</button>
+                <button onClick={() => handleBetAmountChange(profile?.balance || 0)} className='px-4 cursor-pointer py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors'>Max</button>
               </div>
 
               <button
@@ -487,7 +500,7 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
             <div className='space-y-6'>
               <div className='bg-green-900/20 rounded-t-full border-4 border-amber-800/50 p-6 min-h-[220px] relative overflow-hidden'>
                 {winner === 'dealer' && <ConfettiComponent />}
-                <div className='flex justify-center items-center mb-4'>
+                <div className='flex justify-center items-center mb-4 space-x-4'>
                   <h3 className='text-xl font-semibold text-slate-300'>Dealer</h3>
                   <span className='text-lg text-amber-400 font-semibold bg-slate-900/50 px-3 py-1 rounded-md flex items-center gap-1'>
                     Pontuação:
@@ -502,20 +515,7 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
                     const isHidden = isHoleCard && gameState === 'playing'
                     return (
                       <motion.div key={`dealer-${index}`} variants={cardVariants}>
-                        <div className='relative w-24 h-36'>
-                          <AnimatePresence initial={false}>
-                            <motion.div
-                              key={isHidden ? 'back' : 'front'}
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className='absolute inset-0'
-                            >
-                              <CardComponent card={card} hidden={isHidden} />
-                            </motion.div>
-                          </AnimatePresence>
-                        </div>
+                        <CardComponent card={card} hidden={isHidden} />
                       </motion.div>
                     )
                   })}
@@ -524,7 +524,7 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
 
               <div className='bg-green-900/20 rounded-b-full border-4 border-amber-800/50 p-6 min-h-[220px] relative overflow-hidden'>
                 {winner === 'player' && <ConfettiComponent />}
-                <div className='flex justify-center items-center mb-4'>
+                <div className='flex justify-center items-center mb-4 space-x-4'>
                   <h3 className='text-xl font-semibold text-slate-300'>Você</h3>
                   <span className='text-lg text-amber-400 font-semibold bg-slate-900/50 px-3 py-1 rounded-md flex items-center gap-1'>
                     Pontuação:

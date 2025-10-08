@@ -147,7 +147,7 @@ export const Auth = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:scale-105 text-white font-semibold py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 shadow-lg hover:shadow-amber-500/30"
+            className="w-full cursor-pointer bg-gradient-to-r from-amber-500 to-orange-500 hover:scale-105 text-white font-semibold py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 shadow-lg hover:shadow-amber-500/30"
           >
             {loading ? (
               <Spinner />
@@ -171,7 +171,7 @@ export const Auth = () => {
               setIsLogin(!isLogin)
               setError('')
             }}
-            className="text-amber-400 hover:text-amber-300 text-sm transition-colors hover:underline"
+            className="text-amber-400 cursor-pointer hover:text-amber-300 text-sm transition-colors hover:underline"
           >
             {isLogin ? "Não tem uma conta? Registrar-se" : 'Já tem uma conta? Conectar-se'}
           </button>

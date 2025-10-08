@@ -134,7 +134,7 @@ export const UserProfile = ({ onBack }: { onBack: () => void }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4">
             <motion.div variants={itemVariants}>
               <StatCard icon={<Coins className="text-amber-400" size={24} />} label="Saldo Atual" value={formatMoney(profile?.balance ?? 0)} colorClass="text-amber-400" />
             </motion.div>
