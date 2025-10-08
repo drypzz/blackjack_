@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useState, useEffect } from 'react';
 import { ArrowLeft, TrendingUp, Trophy, Coins, History, FileText, Sparkles, CircleDot, Spade } from 'lucide-react';

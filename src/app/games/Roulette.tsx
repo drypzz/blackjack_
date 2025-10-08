@@ -41,7 +41,7 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
     if (typeof window !== 'undefined') {
       spinAudioRef.current = new Audio('/sounds/roulette-spin.mp3')
       spinAudioRef.current.loop = true
-      spinAudioRef.current.volume = 0.4
+      spinAudioRef.current.volume = 0.8
     }
   }, [])
 
@@ -134,7 +134,7 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
 
   const betButtons = [
     { type: 'red' as BetType, label: 'Vermelho', color: 'from-red-500 to-red-700' },
-    { type: 'black' as BetType, label: 'Preto', color: 'from-slate-800 to-slate-900' },
+    { type: 'black' as BetType, label: 'Preto', color: 'from-slate-700 to-slate-900' },
     { type: 'even' as BetType, label: 'Par', color: 'from-blue-600 to-blue-800' },
     { type: 'odd' as BetType, label: 'Ímpar', color: 'from-blue-600 to-blue-800' },
     { type: 'low' as BetType, label: '1–18', color: 'from-emerald-600 to-emerald-700' },
@@ -160,7 +160,7 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
     'text-slate-300'
 
   return (
-    <main className='min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 p-4 md:p-6 text-white font-sans overflow-hidden'>
+    <main className='min-h-screen from-slate-900 via-gray-900 to-slate-900 p-4 md:p-6 text-white font-sans overflow-hidden'>
       <div className='max-w-4xl mx-auto'>
         <button
           onClick={onBack}
@@ -284,7 +284,7 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
                     key={btn.type}
                     onClick={() => setBetType(btn.type)}
                     disabled={spinning}
-                    className={`py-3 px-4 font-bold rounded-xl text-white uppercase tracking-wider shadow-md transition-all duration-200 bg-gradient-to-r ${btn.color}
+                    className={`py-3 px-4 font-bold rounded-xl text-white uppercase tracking-wider shadow-md transition-all duration-200 bg-gradient-to-r cursor-pointer ${btn.color}
                       ${
                         betType === btn.type
                           ? 'ring-2 ring-amber-400 scale-105'
