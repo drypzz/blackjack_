@@ -14,7 +14,7 @@ const HistoryItem = ({ game }: { game: GameHistory }) => {
 
   const icons: { [key: string]: React.ReactNode } = {
     slots: <Sparkles size={24} className="text-amber-400" />,
-    roulette: <CircleDot size={24} className="text-red-400" />,
+    roleta: <CircleDot size={24} className="text-red-400" />,
     blackjack: <Spade size={24} className="text-blue-400" />,
   }
 

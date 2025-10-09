@@ -220,7 +220,7 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
 
         await LocalStorage.addGameHistory({
           user_id: profile.id,
-          game_type: 'roulette',
+          game_type: 'roleta',
           bet_amount: numericBetAmount,
           payout_amount: payout,
           game_data: { result: randomResult, betType },

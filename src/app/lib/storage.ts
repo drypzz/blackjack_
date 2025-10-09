@@ -12,7 +12,7 @@ export interface Profile {
 export interface GameHistory {
   id: string
   user_id: string
-  game_type: 'slots' | 'roulette' | 'blackjack'
+  game_type: 'slots' | 'roleta' | 'blackjack'
   bet_amount: number
   payout_amount: number
   game_data: unknown
