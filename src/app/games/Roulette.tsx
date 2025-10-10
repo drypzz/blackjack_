@@ -119,7 +119,7 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
       setModalInfo({
         type: 'info',
         title: 'Modo Educativo',
-        message: 'A Teoria da Ruína do Jogador sugere que, em um jogo de azar com chances desiguais, um jogador com capital finito acabará falindo contra um oponente com capital infinito (o cassino). Vamos ver isso na prática!'
+        message: 'A Teoria da Ruína do Jogador sugere que, em um jogo de azar com chances desiguais, um jogador com capital finito acabará falindo contra um oponente com capital infinito (o cassino). quanto maior a % mais chances de você ganhar. Vamos ver isso na prática!'
       })
     }
     if (!educationalMode) {
@@ -158,7 +158,7 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
     switch (difficulty) {
       case 'hard': return 0.2
       case 'impossible': return 0.1
-      case 'crazy': return 0.999
+      case 'crazy': return 0.99
       default: return 0.486
     }
   }
@@ -326,32 +326,6 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
             <h1 className='text-4xl font-bold text-amber-400 mb-2 flex items-center justify-center gap-3 tracking-wider'>
               <CircleDot size={32} /> Roleta
             </h1>
-            <div className="flex items-center justify-center gap-4 mt-4">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="educational-mode"
-                  checked={educationalMode}
-                  onChange={(e) => setEducationalMode(e.target.checked)}
-                  className="mr-2 h-4 w-4 rounded accent-amber-500"
-                />
-                <label htmlFor="educational-mode" className="text-slate-300">Modo Educativo</label>
-              </div>
-              <div className="flex items-center">
-                <label className={`text-slate-300 transition-opacity duration-300 ${educationalMode ? 'opacity-100' : 'opacity-50'}`}>Dificuldade:</label>
-                <select
-                  value={difficulty}
-                  onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-                  className={`bg-slate-900 border border-slate-600 rounded-md px-2 py-1 ml-2 transition-opacity duration-300 ${!educationalMode ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  disabled={spinning || result !== null || !educationalMode}
-                >
-                  <option value="normal">Normal (48.6%)</option>
-                  <option value="hard">Difícil (20%)</option>
-                  <option value="impossible">Impossível (10%)</option>
-                  <option value="crazy">Louco (99.9%)</option>
-                </select>
-              </div>
-            </div>
           </div>
 
           <div className='relative flex justify-center items-center my-8'>
@@ -524,6 +498,36 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
                 </div>
               </>
             )}
+          </div>
+
+          <div className="flex items-center justify-center gap-4 mt-4">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="educational-mode"
+                checked={educationalMode}
+                onChange={(e) => setEducationalMode(e.target.checked)}
+                className="mr-2 h-4 w-4 rounded accent-amber-500"
+              />
+
+              <label htmlFor="educational-mode" className="text-slate-300">Modo Educativo</label>
+            </div>
+
+            <div className="flex items-center">
+              <label className={`text-slate-300 transition-opacity duration-300 ${educationalMode ? 'opacity-100' : 'opacity-50'}`}>Dificuldade:</label>
+              
+              <select
+                value={difficulty}
+                onChange={(e) => setDifficulty(e.target.value as Difficulty)}
+                className={`bg-slate-900 border border-slate-600 rounded-md px-2 py-1 ml-2 transition-opacity duration-300 ${!educationalMode ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={spinning || result !== null || !educationalMode}
+              >
+                <option value="normal">Normal (48.6%)</option>
+                <option value="hard">Difícil (20%)</option>
+                <option value="impossible">Impossível (10%)</option>
+                <option value="crazy">Louco (99%)</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>

@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 
 import { Geist, Geist_Mono } from 'next/font/google'
 
+import { Footer } from '@/app/components/Footer'
+
 import { Providers } from '@/app/providers'
 
 import './globals.css'
@@ -27,10 +29,13 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang='pt-BR'>
-      <body suppressHydrationWarning={true} className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang='pt-BR' className="h-full">
+      <body suppressHydrationWarning={true} className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col h-full`}>
         <Providers>
-          {children}
+          <main className="flex-grow">
+            {children}
+          </main>
+          <Footer />
         </Providers>
       </body>
     </html>
