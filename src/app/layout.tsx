@@ -17,23 +17,9 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'MZ2K Bet - Cassino Online',
-  description: 'Desenvolvido por GL Code Lab',
+  title: 'Royal Cassino',
+  description: 'Criado por GL Code Lab',
 }
-
-const themeScript = `
-  (function() {
-    try {
-      const savedTheme = localStorage.getItem('casino_theme');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-        document.documentElement.classList.add('dark');
-      }
-    } catch (e) {
-      // Ignora erros de localStorage
-    }
-  })();
-`
 
 export default function RootLayout({
   children,
@@ -41,10 +27,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang='pt-BR' suppressHydrationWarning={true}>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-      </head>
+    <html lang='pt-BR'>
       <body suppressHydrationWarning={true} className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>
           {children}

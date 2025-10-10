@@ -5,7 +5,6 @@ import { motion, AnimatePresence, AnimationGeneratorType, easeInOut } from 'fram
 import { Sparkles, CircleDot, Spade, LogOut, User, Coins } from 'lucide-react'
 
 import { UserProfile } from '@/app/components/UserProfile'
-import { ThemeToggleButton } from '@/app/components/ThemeToggleButton'
 
 import { useAuth } from '@/app/contexts/AuthContext'
 
@@ -193,8 +192,6 @@ export const CasinoLobby = () => {
                     </div>
                   </div>
                 </div>
-
-                <ThemeToggleButton />
 
                 <div className="flex items-center bg-slate-800/80 rounded-xl border border-slate-700">
                   <button
