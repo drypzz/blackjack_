@@ -7,6 +7,7 @@ export interface Profile {
   total_won: number
   created_at: string
   updated_at: string
+  achievements: string[]
 }
 
 export interface GameHistory {
@@ -17,6 +18,7 @@ export interface GameHistory {
   payout_amount: number
   game_data: unknown
   created_at: string
+  balance_after: number
 }
 
 interface User {
@@ -103,6 +105,7 @@ export class LocalStorage {
         total_won: 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        achievements: [],
       }
 
       profiles.push(profile)
@@ -169,8 +172,34 @@ export class LocalStorage {
 
       history.push(newGame)
       this.setGameHistory(history)
+      this.checkAchievements(game.user_id)
       resolve()
     })
+  }
+
+  static checkAchievements(userId: string) {
+    const profile = this.getProfile(userId);
+    if (!profile) return;
+
+    const userHistory = this.getGameHistoryForUser(userId);
+    const newAchievements = [...(profile.achievements || [])];
+
+    if (userHistory.length >= 50 && !newAchievements.includes("sobreviveu_50")) {
+      newAchievements.push("sobreviveu_50");
+    }
+
+    if (profile.balance <= 0 && userHistory.length < 10 && !newAchievements.includes("quebrou_rapido")) {
+      newAchievements.push("quebrou_rapido");
+    }
+
+    const roletaHistory = userHistory.filter(g => g.game_type === 'roleta');
+    if (roletaHistory.some(g => g.bet_amount > 0 && (g.payout_amount / g.bet_amount) >= 2) && !newAchievements.includes("multiplicador_2x")) {
+        newAchievements.push("multiplicador_2x");
+    }
+
+    if (newAchievements.length > (profile.achievements || []).length) {
+      this.updateProfile(userId, { achievements: newAchievements });
+    }
   }
 
   static getGameHistoryForUser(userId: string, limit?: number): GameHistory[] {

@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ArrowLeft, TrendingUp, Trophy, Coins, History, FileText, Sparkles, CircleDot, Spade } from 'lucide-react'
+import { ArrowLeft, TrendingUp, Trophy, Coins, History, FileText, Sparkles, CircleDot, Spade, Download } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+
 import { useAuth } from '../contexts/AuthContext'
 import { LocalStorage, GameHistory } from '../lib/storage'
 import { formatMoney, formatDate } from '../utils/maskUtils'
@@ -69,6 +71,12 @@ type StatCardProps = {
   colorClass: string
 }
 
+const achievementList: { [key: string]: { name: string, description: string } } = {
+  "sobreviveu_50": { name: "Sobrevivente", description: "Sobreviveu por 50 rodadas." },
+  "quebrou_rapido": { name: "azarado", description: "Foi à falência em menos de 10 rodadas." },
+  "multiplicador_2x": { name: "sortudo", description: "Conseguiu um multiplicador 2x na Roleta." },
+}
+
 const StatCard = ({ icon, label, value, colorClass }: StatCardProps) => (
   <div className="bg-slate-900/50 p-4 rounded-xl flex items-center gap-4">
     <div className={`p-3 rounded-lg ${colorClass}/20`}>
@@ -85,6 +93,33 @@ export const UserProfile = ({ onBack }: { onBack: () => void }) => {
   const { profile } = useAuth()
   const [gameHistory, setGameHistory] = useState<GameHistory[]>([])
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (profile) {
+      const history = LocalStorage.getGameHistoryForUser(profile.id)
+      setGameHistory(history)
+      setLoading(false)
+    }
+  }, [profile])
+
+
+  const exportToCSV = () => {
+    let csvContent = "data:text/csvcharset=utf-8,"
+    csvContent += "ID,Tipo de Jogo,Valor da Aposta,Pagamento,Data\n"
+
+    gameHistory.forEach(game => {
+      const row = [game.id, game.game_type, game.bet_amount, game.payout_amount, formatDate(game.created_at)].join(",")
+      csvContent += row + "\r\n"
+    })
+
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement("a")
+    link.setAttribute("href", encodedUri)
+    link.setAttribute("download", "historico_cassino.csv")
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
 
   useEffect(() => {
     if (profile) {
@@ -150,10 +185,57 @@ export const UserProfile = ({ onBack }: { onBack: () => void }) => {
           </div>
         </motion.div>
 
-        <motion.div variants={itemVariants} className="bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700 p-6 sm:p-8">
+        <motion.div variants={itemVariants} className="bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700 p-6 sm:p-8 mb-6">
+          <h2 className="text-2xl font-bold text-white mb-4">Evolução do Saldo</h2>
+          <div style={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer>
+              <LineChart data={gameHistory.slice().reverse()} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="created_at" tickFormatter={(timeStr) => new Date(timeStr).toLocaleTimeString()} stroke="#9ca3af" />
+                <YAxis stroke="#9ca3af" />
+                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151' }} />
+                <Line type="monotone" dataKey="balance_after" name="Saldo" stroke="#f59e0b" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 8 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+
+
+        {/* Conquistas */}
+        <motion.div variants={itemVariants} className="bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700 p-6 sm:p-8 mb-6">
           <div className='flex items-center gap-3 mb-6'>
-            <FileText size={24} className='text-slate-300' />
-            <h2 className="text-2xl font-bold text-white">Histórico de Jogos Recentes</h2>
+            <Trophy size={24} className='text-slate-300' />
+            <h2 className="text-2xl font-bold text-white">Conquistas</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {profile?.achievements?.map(ach => (
+              <div key={ach} className="bg-slate-900/50 p-4 rounded-xl flex items-center gap-4 border border-amber-500/30">
+                <Trophy className="text-amber-400" size={24} />
+                <div>
+                  <div className="font-bold text-white">{achievementList[ach]?.name || ach}</div>
+                  <div className="text-slate-400 text-sm">{achievementList[ach]?.description}</div>
+                </div>
+              </div>
+            ))}
+            {(!profile?.achievements || profile.achievements.length === 0) && (
+              <div className="text-center text-slate-400 col-span-full">Nenhuma conquista ainda.</div>
+            )}
+          </div>
+        </motion.div>
+
+        <motion.div variants={itemVariants} className="bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700 p-6 sm:p-8">
+          <div className='flex items-center justify-between mb-6'>
+            <div className="flex items-center gap-3">
+              <FileText size={24} className='text-slate-300' />
+              <h2 className="text-2xl font-bold text-white">Histórico de Jogos Recentes</h2>
+            </div>
+            <button
+              onClick={exportToCSV}
+              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
+            >
+              <Download size={20} />
+              Exportar CSV
+            </button>
           </div>
 
           <AnimatePresence>

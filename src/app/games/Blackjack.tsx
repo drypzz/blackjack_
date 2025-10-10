@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Spade, ArrowLeft, Heart, Diamond, Club, X, Hand, Plus, RefreshCw } from 'lucide-react'
 import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/solid'
 import { motion, AnimatePresence, Variants } from 'framer-motion'
@@ -377,16 +377,18 @@ export const Blackjack = ({ onBack }: { onBack: () => void }) => {
         bet_amount: Number(betAmount),
         payout_amount: payout,
         game_data: { playerHand: pHand, dealerHand: dHand, playerScore, dealerScore },
+        balance_after: profile.balance + payout,
       })
       refreshProfile()
-    } else if (profile) {
       await LocalStorage.addGameHistory({
         user_id: profile.id,
         game_type: 'blackjack',
         bet_amount: Number(betAmount),
         payout_amount: 0,
         game_data: { playerHand: pHand, dealerHand: dHand, playerScore, dealerScore },
+        balance_after: profile.balance,
       })
+      refreshProfile()
       refreshProfile()
     }
   }

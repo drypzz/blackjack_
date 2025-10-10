@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { ArrowLeft, X, RefreshCw, CircleDot } from 'lucide-react'
-import { CheckCircleIcon, XCircleIcon, } from '@heroicons/react/24/solid'
+import { CheckCircleIcon, XCircleIcon, InformationCircleIcon } from '@heroicons/react/24/solid'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { ConfettiComponent } from '@/app/components/Confetti'
@@ -11,7 +11,7 @@ import { LocalStorage } from '@/app/lib/storage'
 import { formatMoney } from '@/app/utils/maskUtils'
 
 type ModalInfo = {
-  type: 'win' | 'loss'
+  type: 'win' | 'loss' | 'info'
   title: string
   message: string
   amount?: number
@@ -23,10 +23,12 @@ const ResultModal = ({ info, onClose }: { info: ModalInfo; onClose: () => void }
   const icons = {
     win: <CheckCircleIcon className='h-16 w-16 text-emerald-400' />,
     loss: <XCircleIcon className='h-16 w-16 text-red-500' />,
+    info: <InformationCircleIcon className='h-16 w-16 text-blue-400' />,
   }
   const borderColors = {
     win: 'border-emerald-500',
     loss: 'border-red-600',
+    info: 'border-blue-500',
   }
 
   return (
@@ -57,6 +59,7 @@ const ResultModal = ({ info, onClose }: { info: ModalInfo; onClose: () => void }
 }
 
 type BetType = 'red' | 'black' | 'even' | 'odd' | 'low' | 'high' | null
+type Difficulty = 'normal' | 'hard' | 'impossible' | 'crazy'
 
 const ROULETTE_NUMBERS = [
   { num: 0, color: 'green' }, { num: 32, color: 'red' }, { num: 15, color: 'black' },
@@ -94,6 +97,10 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
   const [endGameInfo, setEndGameInfo] = useState<ModalInfo>(null)
   const [showConfetti, setShowConfetti] = useState(false)
   const [canPlayAgain, setCanPlayAgain] = useState(false)
+  const [difficulty, setDifficulty] = useState<Difficulty>('normal')
+  const [educationalMode, setEducationalMode] = useState(false)
+  const [round, setRound] = useState(0)
+
 
   const getBetButton = () => betButtons.find(b => b.type === betType)?.label
 
@@ -107,19 +114,32 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
     }
   }, [])
 
+  useEffect(() => {
+    if (educationalMode && round === 0) {
+      setModalInfo({
+        type: 'info',
+        title: 'Modo Educativo',
+        message: 'A Teoria da Ruína do Jogador sugere que, em um jogo de azar com chances desiguais, um jogador com capital finito acabará falindo contra um oponente com capital infinito (o cassino). Vamos ver isso na prática!'
+      })
+    }
+    if (!educationalMode) {
+      setDifficulty('normal')
+    }
+  }, [educationalMode, round])
+
   const handleBetAmountChange = (value: number | string) => {
     if (value === '') {
       setBetAmount('')
       return
     }
-    
+
     const numValue = Number(value)
     if (profile && !isNaN(numValue)) {
       const clampedValue = Math.min(numValue, profile.balance)
       setBetAmount(clampedValue)
     }
   }
-  
+
   const handleBetBlur = () => {
     const numericValue = Number(betAmount)
     if (isNaN(numericValue) || numericValue < 10) {
@@ -129,18 +149,30 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
 
   const handleModalClose = () => {
     setModalInfo(null)
-    setCanPlayAgain(true)
+    if (endGameInfo) {
+      setCanPlayAgain(true)
+    }
+  }
+
+  const getWinChance = () => {
+    switch (difficulty) {
+      case 'hard': return 0.2
+      case 'impossible': return 0.1
+      case 'crazy': return 0.999
+      default: return 0.486
+    }
   }
 
   const spin = async () => {
+    setRound(round + 1)
     const numericBetAmount = Number(betAmount)
     if (!profile || spinning || !betType) return
     if (numericBetAmount > profile.balance) {
-      setModalInfo({type: 'loss', title: 'Saldo Insuficiente!', message: `Você tentou apostar ${formatMoney(numericBetAmount)}, mas só tem ${formatMoney(profile.balance)}.`})
+      setModalInfo({ type: 'loss', title: 'Saldo Insuficiente!', message: `Você tentou apostar ${formatMoney(numericBetAmount)}, mas só tem ${formatMoney(profile.balance)}.` })
       return
     }
     if (numericBetAmount < 10) {
-      setModalInfo({type: 'loss', title: 'Aposta Mínima', message: 'A aposta mínima na roleta é de 10 créditos.'})
+      setModalInfo({ type: 'loss', title: 'Aposta Mínima', message: 'A aposta mínima na roleta é de 10 créditos.' })
       return
     }
 
@@ -155,7 +187,25 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
     setSpinning(true)
     setResult(null)
 
-    const randomResult = ROULETTE_NUMBERS[Math.floor(Math.random() * ROULETTE_NUMBERS.length)]
+    const winChance = getWinChance()
+    const shouldWin = Math.random() < winChance
+
+    let possibleResults = ROULETTE_NUMBERS.filter(n => {
+      if (betType === 'red') return n.color === 'red'
+      if (betType === 'black') return n.color === 'black'
+      if (betType === 'even') return n.num !== 0 && n.num % 2 === 0
+      if (betType === 'odd') return n.num !== 0 && n.num % 2 === 1
+      if (betType === 'low') return n.num >= 1 && n.num <= 18
+      if (betType === 'high') return n.num >= 19 && n.num <= 36
+      return false
+    })
+
+    if (!shouldWin) {
+      possibleResults = ROULETTE_NUMBERS.filter(n => !possibleResults.includes(n))
+    }
+
+    const randomResult = possibleResults[Math.floor(Math.random() * possibleResults.length)]
+
     const winningIndex = ROULETTE_NUMBERS.findIndex(n => n.num === randomResult.num)
 
     const totalSegments = ROULETTE_NUMBERS.length
@@ -164,7 +214,7 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
     const randomOffset = (Math.random() - 0.5) * (anglePerSegment * 0.8)
     const targetAngle = -winningAngle - randomOffset
     const newRotation = rotation - (rotation % 360) + (5 * 360) + targetAngle
-    
+
     setRotation(newRotation)
 
     setTimeout(() => {
@@ -186,13 +236,13 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
         else if (betType === 'high' && randomResult.num >= 19 && randomResult.num <= 36) won = true
 
         const ramdomResultColorTrad = randomResult.color === 'red' ? 'vermelho' : randomResult.color === 'black' ? 'preto' : 'verde'
-        
+
         let modalData: ModalInfo = null
 
         if (won) {
           payout = numericBetAmount * 2
           const netWin = payout
-          
+
           modalData = {
             type: 'win',
             title: 'Você Ganhou!',
@@ -214,7 +264,7 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
             message: `O resultado foi ${randomResult.num} ${ramdomResultColorTrad}. Mais sorte da próxima vez.`,
           }
         }
-        
+
         setModalInfo(modalData)
         setEndGameInfo(modalData)
 
@@ -224,8 +274,9 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
           bet_amount: numericBetAmount,
           payout_amount: payout,
           game_data: { result: randomResult, betType },
+          balance_after: won ? (newBalanceAfterBet + payout) : newBalanceAfterBet,
         })
-        
+
         refreshProfile()
         setSpinning(false)
       }, 800)
@@ -243,13 +294,13 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
   }
 
   const anglePerItem = 360 / ROULETTE_NUMBERS.length
-  
+
   const conicGradient = `conic-gradient(${ROULETTE_NUMBERS.map((item, i) => {
     const color =
       item.color === 'green' ? '#009966' :
-      item.color === 'red' ? '#da3036' :
-      '#171717'
-    
+        item.color === 'red' ? '#da3036' :
+          '#171717'
+
     const from = anglePerItem * i
     const to = anglePerItem * (i + 1)
     return `${color} ${from}deg ${to}deg`
@@ -269,17 +320,43 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
           <ArrowLeft size={20} /> Voltar ao Lobby
         </button>
 
-        <div className='bg-slate-800/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-slate-700 p-6 md:p-8'>
+        <div className='bg-slate-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700 p-6 md:p-8'>
           {showConfetti && <ConfettiComponent />}
           <div className='text-center mb-6'>
             <h1 className='text-4xl font-bold text-amber-400 mb-2 flex items-center justify-center gap-3 tracking-wider'>
               <CircleDot size={32} /> Roleta
             </h1>
+            <div className="flex items-center justify-center gap-4 mt-4">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="educational-mode"
+                  checked={educationalMode}
+                  onChange={(e) => setEducationalMode(e.target.checked)}
+                  className="mr-2 h-4 w-4 rounded accent-amber-500"
+                />
+                <label htmlFor="educational-mode" className="text-slate-300">Modo Educativo</label>
+              </div>
+              <div className="flex items-center">
+                <label className={`text-slate-300 transition-opacity duration-300 ${educationalMode ? 'opacity-100' : 'opacity-50'}`}>Dificuldade:</label>
+                <select
+                  value={difficulty}
+                  onChange={(e) => setDifficulty(e.target.value as Difficulty)}
+                  className={`bg-slate-900 border border-slate-600 rounded-md px-2 py-1 ml-2 transition-opacity duration-300 ${!educationalMode ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={spinning || result !== null || !educationalMode}
+                >
+                  <option value="normal">Normal (48.6%)</option>
+                  <option value="hard">Difícil (20%)</option>
+                  <option value="impossible">Impossível (10%)</option>
+                  <option value="crazy">Louco (99.9%)</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           <div className='relative flex justify-center items-center my-8'>
             <div className='absolute -top-2 z-10'>
-              <div className='w-0 h-0 
+              <div className='w-0 h-0
                 border-l-[10px] border-l-transparent
                 border-r-[10px] border-r-transparent
                 border-t-[20px] border-t-amber-400 drop-shadow-lg'></div>
@@ -290,7 +367,7 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
               animate={{ rotate: rotation }}
               transition={{ duration: 3, ease: 'easeOut' }}
             >
-              <div 
+              <div
                 className='absolute inset-0 rounded-full'
                 style={{ background: conicGradient }}
               />
@@ -298,7 +375,7 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
               {ROULETTE_NUMBERS.map((item, index) => {
                 const angle = anglePerItem * index
                 const numberAngle = angle + anglePerItem / 2
-          
+
                 return (
                   <div
                     key={`${item.num}-${index}`}
@@ -324,7 +401,7 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
               </div>
             </motion.div>
           </div>
-          
+
           <AnimatePresence>
             {endGameInfo && !modalInfo && (
               <motion.div
@@ -336,11 +413,18 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
                   {endGameInfo.title}
                 </h3>
                 {endGameInfo.amount && endGameInfo.amount > 0 && (
-                   <p className='text-2xl font-bold text-emerald-400'>
+                  <p className='text-2xl font-bold text-emerald-400'>
                     +{formatMoney(endGameInfo.amount)}
                   </p>
                 )}
                 <p className="text-slate-300">{endGameInfo.message}</p>
+                {educationalMode && (
+                  <div className="mt-4 p-4 bg-slate-700/50 rounded-lg">
+                    <h4 className="font-bold text-lg text-amber-400">Análise da Rodada</h4>
+                    <p className="text-slate-300">Sua chance de ganhar era de <strong>{(getWinChance() * 100).toFixed(1)}%</strong>.</p>
+                    <p className="text-slate-300">{`Com o tempo, a vantagem da "casa" (${((1 - getWinChance()) * 100).toFixed(1)}%) torna a perda de dinheiro quase inevitável.`}</p>
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -352,95 +436,93 @@ export const Roulette = ({ onBack }: { onBack: () => void }) => {
                   onClick={newGame} disabled={!canPlayAgain}
                   className='w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:from-slate-600 disabled:to-slate-600 text-slate-900 font-bold py-4 rounded-xl transition-all duration-200 disabled:cursor-not-allowed shadow-lg hover:shadow-amber-500/30 text-xl uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer'
                 >
-                  <RefreshCw size={24}/>
+                  <RefreshCw size={24} />
                   Jogar Novamente
                 </button>
               </div>
             ) : (
-            <>
-              <div className='max-w-sm mx-auto'>
-                <label className='block text-slate-300 mb-2 text-center text-lg'>
-                  {`Valor da Aposta: `}
-                  <span className='font-bold text-amber-400 text-xl'>
-                    {formatMoney(Number(betAmount))}
-                  </span>
-                </label>
-                <div className='flex items-center gap-4'>
-                  <input
-                    type='number'
-                    value={betAmount}
-                    onChange={(e) => handleBetAmountChange(e.target.value)}
-                    onBlur={handleBetBlur}
-                    disabled={spinning}
-                    className='w-32 bg-slate-900/70 border-2 border-slate-600 rounded-lg text-amber-400 text-center text-xl font-bold py-2 px-2 focus:ring-2 focus:ring-amber-500 focus:outline-none appearance-none'
-                    placeholder='10'
-                  />
-                  <input
-                    type='range'
-                    min='10'
-                    max={profile?.balance || 10}
-                    value={Number(betAmount)}
-                    onChange={(e) => handleBetAmountChange(e.target.value)}
-                    disabled={spinning}
-                    className='w-full h-3 bg-slate-700 rounded-lg accent-amber-500 cursor-pointer'
-                  />
-                </div>
-                <div className='flex justify-center gap-2 mt-3'>
-                  <button onClick={() => handleBetAmountChange(Math.floor(Number(betAmount) / 2))} disabled={spinning} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors cursor-pointer'>½</button>
-                  <button onClick={() => handleBetAmountChange(Number(betAmount) * 2)} disabled={spinning} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors cursor-pointer'>2x</button>
-                  <button onClick={() => handleBetAmountChange(Number(betAmount) + 10)} disabled={spinning} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors cursor-pointer'>+10</button>
-                  <button onClick={() => handleBetAmountChange(Number(betAmount) + 100)} disabled={spinning} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors cursor-pointer'>+100</button>
-                  <button onClick={() => handleBetAmountChange(Number(betAmount) + 500)} disabled={spinning} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors cursor-pointer'>+500</button>
-                </div>
-                <div className='flex justify-center gap-2 mt-3'>
-                  <button onClick={() => handleBetAmountChange(Number(betAmount) + 1000)} disabled={spinning} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors cursor-pointer'>+1000</button>
-                  <button onClick={() => handleBetAmountChange(Number(betAmount) + 2000)} disabled={spinning} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors cursor-pointer'>+2000</button>
-                  <button onClick={() => handleBetAmountChange(Number(betAmount) + 5000)} disabled={spinning} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors cursor-pointer'>+5000</button>
-                  <button onClick={() => handleBetAmountChange(profile?.balance || 0)} disabled={spinning} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors cursor-pointer'>Max</button>
-                </div>
-              </div>
-
-              <div className='max-w-lg mx-auto'>
-                <label className='block text-slate-300 mb-3 text-center text-lg'>
-                  Escolha sua aposta:
-                </label>
-                <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
-                  {betButtons.map((btn, index) => (
-                    <button
-                      key={btn.type}
-                      onClick={() => setBetType(btn.type)}
+              <>
+                <div className='max-w-sm mx-auto'>
+                  <label className='block text-slate-300 mb-2 text-center text-lg'>
+                    {`Valor da Aposta: `}
+                    <span className='font-bold text-amber-400 text-xl'>
+                      {formatMoney(Number(betAmount))}
+                    </span>
+                  </label>
+                  <div className='flex items-center gap-4'>
+                    <input
+                      type='number'
+                      value={betAmount}
+                      onChange={(e) => handleBetAmountChange(e.target.value)}
+                      onBlur={handleBetBlur}
                       disabled={spinning}
-                      className={`py-3 px-2 text-sm font-bold rounded-xl text-white uppercase tracking-wider shadow-md transition-all duration-200 bg-gradient-to-r ${btn.color} cursor-pointer
-                        ${
-                          betType === btn.type
+                      className='w-32 bg-slate-900/70 border-2 border-slate-600 rounded-lg text-amber-400 text-center text-xl font-bold py-2 px-2 focus:ring-2 focus:ring-amber-500 focus:outline-none appearance-none'
+                      placeholder='10'
+                    />
+                    <input
+                      type='range'
+                      min='10'
+                      max={profile?.balance || 10}
+                      value={Number(betAmount)}
+                      onChange={(e) => handleBetAmountChange(e.target.value)}
+                      disabled={spinning}
+                      className='w-full h-3 bg-slate-700 rounded-lg accent-amber-500 cursor-pointer'
+                    />
+                  </div>
+                  <div className='flex justify-center gap-2 mt-3'>
+                    <button onClick={() => handleBetAmountChange(Math.floor(Number(betAmount) / 2))} disabled={spinning} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors cursor-pointer'>½</button>
+                    <button onClick={() => handleBetAmountChange(Number(betAmount) * 2)} disabled={spinning} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors cursor-pointer'>2x</button>
+                    <button onClick={() => handleBetAmountChange(Number(betAmount) + 10)} disabled={spinning} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors cursor-pointer'>+10</button>
+                    <button onClick={() => handleBetAmountChange(Number(betAmount) + 100)} disabled={spinning} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors cursor-pointer'>+100</button>
+                    <button onClick={() => handleBetAmountChange(Number(betAmount) + 500)} disabled={spinning} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors cursor-pointer'>+500</button>
+                  </div>
+                  <div className='flex justify-center gap-2 mt-3'>
+                    <button onClick={() => handleBetAmountChange(Number(betAmount) + 1000)} disabled={spinning} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors cursor-pointer'>+1000</button>
+                    <button onClick={() => handleBetAmountChange(Number(betAmount) + 2000)} disabled={spinning} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors cursor-pointer'>+2000</button>
+                    <button onClick={() => handleBetAmountChange(Number(betAmount) + 5000)} disabled={spinning} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors cursor-pointer'>+5000</button>
+                    <button onClick={() => handleBetAmountChange(profile?.balance || 0)} disabled={spinning} className='px-4 py-1 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors cursor-pointer'>Max</button>
+                  </div>
+                </div>
+
+                <div className='max-w-lg mx-auto'>
+                  <label className='block text-slate-300 mb-3 text-center text-lg'>
+                    Escolha sua aposta:
+                  </label>
+                  <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
+                    {betButtons.map((btn, index) => (
+                      <button
+                        key={btn.type}
+                        onClick={() => setBetType(btn.type)}
+                        disabled={spinning}
+                        className={`py-3 px-2 text-sm font-bold rounded-xl text-white uppercase tracking-wider shadow-md transition-all duration-200 bg-gradient-to-r ${btn.color} cursor-pointer
+                        ${betType === btn.type
                             ? 'ring-2 ring-amber-400 scale-105'
                             : 'opacity-80 hover:opacity-100'
-                        }
-                        ${
-                          index === 4 ? 'sm:col-start-2' : ''
-                        }
+                          }
+                        ${index === 4 ? 'sm:col-start-2' : ''
+                          }
                       `}
-                    >
-                      {btn.label}
-                    </button>
-                  ))}
+                      >
+                        {btn.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              <div className='max-w-sm mx-auto'>
-                <button
-                  onClick={spin}
-                  disabled={spinning || !profile || !betType || Number(betAmount) > (profile?.balance || 0) || Number(betAmount) < 10}
-                  className='w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:from-slate-600 disabled:to-slate-600 text-slate-900 font-bold py-4 rounded-xl transition-all duration-200 disabled:cursor-not-allowed shadow-lg hover:shadow-amber-500/30 text-xl uppercase tracking-widest cursor-pointer'
-                >
-                  {spinning
-                    ? 'GIRANDO...'
-                    : betType
-                    ? `Apostar em ${getBetButton()}`
-                    : 'Selecione um tipo de aposta'}
-                </button>
-              </div>
-            </>
+                <div className='max-w-sm mx-auto'>
+                  <button
+                    onClick={spin}
+                    disabled={spinning || !profile || !betType || Number(betAmount) > (profile?.balance || 0) || Number(betAmount) < 10}
+                    className='w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:from-slate-600 disabled:to-slate-600 text-slate-900 font-bold py-4 rounded-xl transition-all duration-200 disabled:cursor-not-allowed shadow-lg hover:shadow-amber-500/30 text-xl uppercase tracking-widest cursor-pointer'
+                  >
+                    {spinning
+                      ? 'GIRANDO...'
+                      : betType
+                        ? `Apostar em ${getBetButton()}`
+                        : 'Selecione um tipo de aposta'}
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>

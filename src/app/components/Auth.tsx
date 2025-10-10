@@ -78,7 +78,7 @@ export const Auth = () => {
       >
         <div className="text-center mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500 mb-2">
-            Royal Casino
+            MZ2K Bet
           </h1>
           <p className="text-slate-400">
             {isLogin ? 'Bem-vindo de volta!' : 'Junte-se à emoção'}
