@@ -1,40 +1,36 @@
 'use client'
 
-import { Github } from 'lucide-react'
+import { CircleUser } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 import { useState, useEffect } from 'react'
 
-/**
- * Hook para monitorar media queries e adaptar o layout.
- * @param query - A string da media query (ex: '(max-width: 768px)').
- */
 export const useMediaQuery = (query: string) => {
-  const [matches, setMatches] = useState(false)
+   const [matches, setMatches] = useState(false)
 
-  useEffect(() => {
-    // Garante que o código só rode no lado do cliente
-    if (typeof window !== 'undefined') {
-      const media = window.matchMedia(query)
-      if (media.matches !== matches) {
-        setMatches(media.matches)
-      }
-      const listener = () => {
-        setMatches(media.matches)
-      }
-      media.addEventListener('change', listener)
-      return () => media.removeEventListener('change', listener)
-    }
-  }, [matches, query])
+   useEffect(() => {
+      if (typeof window !== 'undefined') {
+         const media = window.matchMedia(query)
+         if (media.matches !== matches) {
+            setMatches(media.matches)
+         }
+         const listener = () => {
+            setMatches(media.matches)
+         }
+         media.addEventListener('change', listener)
 
-  return matches
+         return () => media.removeEventListener('change', listener)
+      }
+   }, [matches, query])
+
+   return matches
 }
 
 export function Footer() {
    const socialLinks = [
-      { icon: <Github size={24} />, href: 'https://github.com/drypzz', name: 'Drypzz' },
-      { icon: <Github size={24} />, href: 'https://github.com/Felipe-G-Schmitt', name: 'Felipe-G-Schmitt' },
-      { icon: <Github size={24} />, href: 'https://github.com/function404', name: 'Function404' },
+      { icon: <CircleUser size={24} />, href: 'https://github.com/drypzz', name: 'Drypzz' },
+      { icon: <CircleUser size={24} />, href: 'https://github.com/Felipe-G-Schmitt', name: 'Felipe-G-Schmitt' },
+      { icon: <CircleUser size={24} />, href: 'https://github.com/function404', name: 'Function404' },
    ]
 
    const isMobile = useMediaQuery('(max-width: 768px)')
@@ -63,13 +59,13 @@ export function Footer() {
 
    return (
       <motion.footer
-         className="bg-slate-900/50 backdrop-blur-xl border-t border-slate-700 mt-auto py-8 px-6 text-white"
+         className="bg-gradient-to-br from-slate-900/50 via-slate-800/50 to-slate-900/50 backdrop-blur-xl border-t border-slate-700 mt-auto py-8 px-6 text-white"
          variants={footerVariants}
          initial="hidden"
          whileInView="visible"
          viewport={{ once: true, amount: 0.5 }}
       >
-         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 md:text-left">
             <motion.div variants={itemVariants}>
                <h3 className="text-xl font-bold text-amber-400 mb-4">MZK2 Bet</h3>
                <p className="text-slate-400">
@@ -87,7 +83,7 @@ export function Footer() {
             </motion.div>
             <motion.div variants={itemVariants}>
                <h3 className="text-lg font-semibold text-white mb-4">Siga os devs</h3>
-               <div className="flex flex-col items-center md:items-start space-y-3">
+               <div className="flex flex-col md:items-start space-y-3">
                   {socialLinks.map((link, index) => (
                      <motion.a
                         key={index}
