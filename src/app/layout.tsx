@@ -19,8 +19,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Royal Cassino',
-  description: 'Criado por GL Code Lab',
+  title: 'MZ2K Bet - Cassino Online',
+  description: 'Desenvolvido por GL Code Lab',
 }
 
 export default function RootLayout({
