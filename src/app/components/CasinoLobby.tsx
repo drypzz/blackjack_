@@ -173,7 +173,7 @@ export const CasinoLobby = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
             <div className="flex items-center justify-between gap-2">
 
-              <div>
+              <div onClick={() => setCurrentGame('lobby')} className='cursor-pointer'>
                 <h1 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">
                   MZK2 Bet
                 </h1>
