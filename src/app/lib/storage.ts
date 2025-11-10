@@ -34,6 +34,22 @@ const STORAGE_KEYS = {
   CURRENT_USER: 'casino_current_user',
 }
 
+function generateShortSafeId(size = 21) {
+  const alphabet = 'ModuleSymbhasOwnPr-0123456789ABCDEFGHNRVfgctiUImOPlmeqKzLWhjdnxMyXJSwuZK'
+  const alphabetLength = alphabet.length
+
+  const bytes = new Uint8Array(size)
+  
+  crypto.getRandomValues(bytes)
+
+  let id = ''
+  for (let i = 0; i < size; i++) {
+    id += alphabet[bytes[i] % alphabetLength]
+  }
+
+  return id
+}
+
 export class LocalStorage {
   private static getUsers(): User[] {
     const data = localStorage.getItem(STORAGE_KEYS.USERS)
@@ -90,7 +106,7 @@ export class LocalStorage {
         return
       }
 
-      const id = crypto.randomUUID()
+      const id = generateShortSafeId()
       const user = { id, email, password }
 
       users.push(user)
@@ -166,7 +182,7 @@ export class LocalStorage {
       const history = this.getGameHistory()
       const newGame: GameHistory = {
         ...game,
-        id: crypto.randomUUID(),
+        id: generateShortSafeId(),
         created_at: new Date().toISOString(),
       }
 
@@ -178,27 +194,27 @@ export class LocalStorage {
   }
 
   static checkAchievements(userId: string) {
-    const profile = this.getProfile(userId);
-    if (!profile) return;
+    const profile = this.getProfile(userId)
+    if (!profile) return
 
-    const userHistory = this.getGameHistoryForUser(userId);
-    const newAchievements = [...(profile.achievements || [])];
+    const userHistory = this.getGameHistoryForUser(userId)
+    const newAchievements = [...(profile.achievements || [])]
 
     if (userHistory.length >= 50 && !newAchievements.includes("sobreviveu_50")) {
-      newAchievements.push("sobreviveu_50");
+      newAchievements.push("sobreviveu_50")
     }
 
     if (profile.balance <= 0 && userHistory.length < 10 && !newAchievements.includes("quebrou_rapido")) {
-      newAchievements.push("quebrou_rapido");
+      newAchievements.push("quebrou_rapido")
     }
 
-    const roletaHistory = userHistory.filter(g => g.game_type === 'roleta');
+    const roletaHistory = userHistory.filter(g => g.game_type === 'roleta')
     if (roletaHistory.some(g => g.bet_amount > 0 && (g.payout_amount / g.bet_amount) >= 2) && !newAchievements.includes("multiplicador_2x")) {
-        newAchievements.push("multiplicador_2x");
+        newAchievements.push("multiplicador_2x")
     }
 
     if (newAchievements.length > (profile.achievements || []).length) {
-      this.updateProfile(userId, { achievements: newAchievements });
+      this.updateProfile(userId, { achievements: newAchievements })
     }
   }
 
