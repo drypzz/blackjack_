@@ -226,6 +226,7 @@ export const CasinoLobby = () => {
             exit="out"
             variants={pageVariants}
             transition={pageTransition}
+            className='p-10'
           >
             {renderContent()}
           </motion.div>
